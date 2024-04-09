@@ -1,4 +1,6 @@
 #include "marshal.h"
+#include "str_object.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -7,6 +9,7 @@
 
 
 #define TYPE_CODE 'c'
+#define TYPE_STRING 's'
 
 
 typedef struct {
@@ -32,6 +35,16 @@ static void* r_object(pyc_file* f) {
     uint8_t type = ref_type & ~0x80;
 
     switch (type) {
+    case TYPE_STRING: {
+        printf("type string\n");
+        int len = r_long(f);
+        uint8_t* s = f->start;
+        f->start += len;
+        Object* ret = string_new(s, len);
+        return ret;
+        break;
+    }
+
     case TYPE_CODE: {
         printf("type code\n");
         int argcount        = r_long(f);
@@ -61,7 +74,9 @@ static void* r_object(pyc_file* f) {
         // void* exceptiontable = r_object(f);
 
         void* code = r_object(f);
-        printf("%p\n", code);
+        object_print(1, code);
+        void* consts = r_object(f);
+        printf("%p\n", consts);
 
         break;
     }
