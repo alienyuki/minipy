@@ -1,5 +1,6 @@
 #include "marshal.h"
 #include "str_object.h"
+#include "tuple_object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,13 +11,21 @@
 
 #define TYPE_CODE 'c'
 #define TYPE_STRING 's'
-
+#define TYPE_SMALL_TUPLE ')'
 
 typedef struct {
     uint8_t  buffer[4096];
     uint8_t* start;
     uint8_t* end;
 } pyc_file;
+
+
+static uint8_t r_byte(pyc_file* f) {
+    uint8_t* p = f->start;
+    uint8_t ret = p[0];
+    f->start += 1;
+    return ret;
+}
 
 
 static int r_long(pyc_file* f) {
@@ -35,6 +44,20 @@ static void* r_object(pyc_file* f) {
     uint8_t type = ref_type & ~0x80;
 
     switch (type) {
+    case TYPE_SMALL_TUPLE: {
+        printf("type small tuple\n");
+        int len = r_byte(f);
+        Object* ret = tuple_new(len);
+
+        for (int i = 0; i < len; i++) {
+            Object* o = (Object*) r_object(f);
+            tuple_set(ret, i, o);
+        }
+
+        return ret;
+        break;
+    }
+
     case TYPE_STRING: {
         printf("type string\n");
         int len = r_long(f);
@@ -76,7 +99,7 @@ static void* r_object(pyc_file* f) {
         void* code = r_object(f);
         object_print(1, code);
         void* consts = r_object(f);
-        printf("%p\n", consts);
+        object_print(1, consts);
 
         break;
     }
