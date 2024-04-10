@@ -2,6 +2,7 @@
 #include "str_object.h"
 #include "tuple_object.h"
 #include "long_object.h"
+#include "none_object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +15,7 @@
 #define TYPE_STRING 's'
 #define TYPE_SMALL_TUPLE ')'
 #define TYPE_INT 'i'
+#define TYPE_NONE 'N'
 
 typedef struct {
     uint8_t  buffer[4096];
@@ -46,6 +48,11 @@ static void* r_object(pyc_file* f) {
     uint8_t type = ref_type & ~0x80;
 
     switch (type) {
+    case TYPE_NONE: {
+        return none_new();
+        break;
+    }
+
     case TYPE_INT: {
         printf("type int\n");
         int len = r_long(f);
