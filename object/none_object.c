@@ -9,6 +9,7 @@ TypeObject type_none = {
 };
 
 Object none_object = {
+    .refcnt = IMMORTAL_REF,
     .type = &type_none,
 };
 

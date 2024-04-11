@@ -119,6 +119,13 @@ static void* r_object(pyc_file* f) {
         void* consts = r_object(f);
         object_print(1, consts);
 
+        // Of course it should return a Code Object in future.
+        // but temporarily return a tuple for memory leak test.
+        Object* ret = tuple_new(2);
+        tuple_set(ret, 0, (Object*) code);
+        tuple_set(ret, 1, (Object*) consts);
+        return ret;
+
         break;
     }
 
@@ -132,7 +139,7 @@ static void* r_object(pyc_file* f) {
 }
 
 
-void unmarshal_pyc(const char* filename) {
+void* unmarshal_pyc(const char* filename) {
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
         printf("error: open\n");
@@ -158,5 +165,5 @@ void unmarshal_pyc(const char* filename) {
     printf("%x\n", r_long(&f));
     printf("%x\n", r_long(&f));
     printf("%x\n", r_long(&f));
-    r_object(&f);
+    return r_object(&f);
 }

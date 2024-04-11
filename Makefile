@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Werror
+CFLAGS = -g -Wall -Werror -fsanitize=address
 
 OBJ_DIR = object
 INC_DIR = -I./test -I./vm -I./object

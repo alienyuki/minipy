@@ -5,17 +5,24 @@
 #include <stdio.h>
 
 static Object* long_str(Object* obj);
+static void long_destr(Object* obj);
 
 TypeObject type_long = {
     .name = "long",
     .str  = long_str,
+    .destr = long_destr,
 };
 
 Object* long_new(int n) {
     LongObject* ret = malloc(sizeof(LongObject));
-    ret->n = n;
     ret->base.type = &type_long;
+    ret->base.refcnt = 1;
+    ret->n = n;
     return (Object*) ret;
+}
+
+static void long_destr(Object* obj) {
+    free(obj);
 }
 
 static Object* long_str(Object* obj) {

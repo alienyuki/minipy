@@ -5,17 +5,19 @@
 #include <assert.h>
 
 static Object* tuple_str(Object* obj);
-
+static void tuple_destr(Object* obj);
 
 TypeObject type_tuple = {
     .name = "tuple",
     .str  = tuple_str,
+    .destr = tuple_destr,
 };
 
 Object* tuple_new(int n) {
-    TupleObject* ret = malloc(sizeof(TupleObject) + n * sizeof(uint8_t));
-    ret->size = n;
+    TupleObject* ret = malloc(sizeof(TupleObject) + n * sizeof(Object*));
+    ret->base.refcnt = 1;
     ret->base.type = &type_tuple;
+    ret->size = n;
     return (Object*) ret;
 }
 
@@ -34,6 +36,7 @@ static Object* tuple_str(Object* obj) {
         tmp[tmp_index] = ',';
         tmp[tmp_index + 1] = ' ';
         tmp_index += 2;
+        DECREF(s);
     }
 
     if (tmp_index != 1) {
@@ -44,6 +47,17 @@ static Object* tuple_str(Object* obj) {
     tmp_index += 1;
 
     return string_new(tmp, tmp_index);
+}
+
+static void tuple_destr(Object* obj) {
+    assert(obj->type == &type_tuple);
+    TupleObject* o = (TupleObject*) obj;
+
+    for (int i = 0; i < o->size; i++) {
+        DECREF(o->items[i]);
+    }
+
+    free(o);
 }
 
 int tuple_set(Object* tuple, int index, Object* o) {
