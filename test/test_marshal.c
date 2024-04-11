@@ -8,4 +8,5 @@ int main() {
 
     object_print(1, code_obj);
     DECREF(code_obj);
+    printf("\n");
 }

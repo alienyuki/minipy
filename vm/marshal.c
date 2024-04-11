@@ -16,6 +16,9 @@
 #define TYPE_SMALL_TUPLE ')'
 #define TYPE_INT 'i'
 #define TYPE_NONE 'N'
+#define TYPE_SHORT_ASCII 'z'
+#define TYPE_SHORT_ASCII_INTERNED 'Z'
+
 
 typedef struct {
     uint8_t  buffer[4096];
@@ -48,6 +51,16 @@ static void* r_object(pyc_file* f) {
     uint8_t type = ref_type & ~0x80;
 
     switch (type) {
+    case TYPE_SHORT_ASCII_INTERNED:    
+    // fall through
+    case TYPE_SHORT_ASCII: {
+        int len = r_byte(f);
+        uint8_t* s = f->start;
+        f->start += len;
+        Object* ret = string_new(s, len);
+        return ret;
+    }
+
     case TYPE_NONE: {
         return none_new();
         break;
@@ -118,12 +131,27 @@ static void* r_object(pyc_file* f) {
         object_print(1, code);
         void* consts = r_object(f);
         object_print(1, consts);
+        void* names = r_object(f);
+        object_print(1, names);
+        void* localsplusnames = r_object(f);
+        object_print(1, localsplusnames);
+        void* localspluskinds = r_object(f);
+        object_print(1, localspluskinds);
+        void* filename = r_object(f);
+        object_print(1, filename);
+        void* name = r_object(f);
+        object_print(1, name);
 
         // Of course it should return a Code Object in future.
         // but temporarily return a tuple for memory leak test.
-        Object* ret = tuple_new(2);
+        Object* ret = tuple_new(7);
         tuple_set(ret, 0, (Object*) code);
         tuple_set(ret, 1, (Object*) consts);
+        tuple_set(ret, 2, (Object*) names);
+        tuple_set(ret, 3, (Object*) localsplusnames);
+        tuple_set(ret, 4, (Object*) localspluskinds);
+        tuple_set(ret, 5, (Object*) filename);
+        tuple_set(ret, 6, (Object*) name);
         return ret;
 
         break;
