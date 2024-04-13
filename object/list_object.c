@@ -17,10 +17,11 @@ TypeObject type_list = {
 
 Object* list_new(int n) {
     ListObject* ret = malloc(sizeof(ListObject));
+    n = n > 4 ? n : 4;
     ret->base.refcnt = 1;
     ret->base.type = &type_list;
     ret->len = 0;
-    ret->capacity = n > 4 ? n : 4;
+    ret->capacity = n;
     ret->items = malloc(n * sizeof(Object*));
     memset(ret->items, 0, n * sizeof(Object*));
     return (Object*) ret;

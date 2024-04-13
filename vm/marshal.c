@@ -19,12 +19,14 @@
 #define TYPE_NONE 'N'
 #define TYPE_SHORT_ASCII 'z'
 #define TYPE_SHORT_ASCII_INTERNED 'Z'
+#define TYPE_REF 'r'
 
 
 typedef struct {
     uint8_t  buffer[4096];
     uint8_t* start;
     uint8_t* end;
+    ListObject* refs;
 } pyc_file;
 
 
@@ -46,15 +48,11 @@ static int r_long(pyc_file* f) {
 static void* r_object(pyc_file* f) {
     uint8_t ref_type = *f->start;
     f->start++;
+    Object* ret = NULL;
 
     // TODO: What does ref do?
     uint8_t ref  = ref_type & 0x80;
     uint8_t type = ref_type & ~0x80;
-
-    if (ref != 0) {
-        printf("\nref: %c!\n", type);
-        fflush(stdout);
-    }
 
     switch (type) {
     case TYPE_SHORT_ASCII_INTERNED:
@@ -63,35 +61,42 @@ static void* r_object(pyc_file* f) {
         int len = r_byte(f);
         uint8_t* s = f->start;
         f->start += len;
-        Object* ret = string_new(s, len);
-        return ret;
+        ret = string_new(s, len);
+        break;
     }
 
     case TYPE_NONE: {
-        return none_new();
+        ret = none_new();
+        break;
+    }
+
+    case TYPE_REF: {
+        int n = r_long(f);
+        printf("%d\n", n);
+        ret = list_get((Object*) f->refs, n);
+
+        INCREF(ret);
         break;
     }
 
     case TYPE_INT: {
         printf("type int\n");
         int len = r_long(f);
-        Object* ret = long_new(len);
+        ret = long_new(len);
         object_print(1, ret);
-        return ret;
         break;
     }
 
     case TYPE_SMALL_TUPLE: {
         printf("type small tuple\n");
         int len = r_byte(f);
-        Object* ret = tuple_new(len);
+        ret = tuple_new(len);
 
         for (int i = 0; i < len; i++) {
             Object* o = (Object*) r_object(f);
             tuple_set(ret, i, o);
         }
 
-        return ret;
         break;
     }
 
@@ -100,8 +105,7 @@ static void* r_object(pyc_file* f) {
         int len = r_long(f);
         uint8_t* s = f->start;
         f->start += len;
-        Object* ret = string_new(s, len);
-        return ret;
+        ret = string_new(s, len);
         break;
     }
 
@@ -133,6 +137,13 @@ static void* r_object(pyc_file* f) {
         // void* linetable     = r_object(f);
         // void* exceptiontable = r_object(f);
 
+        int reserve_idx;
+        if (ref) {
+            // reserve a place for the final generate code object
+            reserve_idx = f->refs->len;
+            list_append((Object*) f->refs, none_new());
+        }
+
         void* code = r_object(f);
         object_print(1, code);
         void* consts = r_object(f);
@@ -147,10 +158,14 @@ static void* r_object(pyc_file* f) {
         object_print(1, filename);
         void* name = r_object(f);
         object_print(1, name);
+        void* qualname = r_object(f);
+        object_print(1, qualname);
+
 
         // Of course it should return a Code Object in future.
         // but temporarily return a list for memory leak test.
-        Object* ret = list_new(4);
+
+        ret = list_new(4);
         list_append(ret, (Object*) code);
         list_append(ret, (Object*) consts);
         list_append(ret, (Object*) names);
@@ -158,9 +173,10 @@ static void* r_object(pyc_file* f) {
         list_append(ret, (Object*) localspluskinds);
         list_append(ret, (Object*) filename);
         list_append(ret, (Object*) name);
+        list_append(ret, (Object*) qualname);
 
-        return ret;
-
+        printf("%d\n", reserve_idx);
+        object_print(1, (Object*) f->refs);
         break;
     }
 
@@ -170,7 +186,11 @@ static void* r_object(pyc_file* f) {
     }
     }
 
-    return NULL;
+    if (ref) {
+        INCREF(ret);
+        list_append((Object*) f->refs, ret);
+    }
+    return ret;
 }
 
 
@@ -182,6 +202,7 @@ void* unmarshal_pyc(const char* filename) {
     }
 
     pyc_file f;
+    f.refs = (ListObject *) list_new(0);
     int n = read(fd, f.buffer, 4096);
     if (n == -1) {
         printf("error: open\n");
@@ -200,5 +221,7 @@ void* unmarshal_pyc(const char* filename) {
     printf("%x\n", r_long(&f));
     printf("%x\n", r_long(&f));
     printf("%x\n", r_long(&f));
-    return r_object(&f);
+    Object* code = r_object(&f);
+    DECREF(f.refs);
+    return code;
 }
