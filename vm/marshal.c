@@ -3,6 +3,7 @@
 #include "tuple_object.h"
 #include "long_object.h"
 #include "none_object.h"
+#include "list_object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,11 +48,16 @@ static void* r_object(pyc_file* f) {
     f->start++;
 
     // TODO: What does ref do?
-    // uint8_t ref = ref_type | 0x80;
+    uint8_t ref  = ref_type & 0x80;
     uint8_t type = ref_type & ~0x80;
 
+    if (ref != 0) {
+        printf("\nref: %c!\n", type);
+        fflush(stdout);
+    }
+
     switch (type) {
-    case TYPE_SHORT_ASCII_INTERNED:    
+    case TYPE_SHORT_ASCII_INTERNED:
     // fall through
     case TYPE_SHORT_ASCII: {
         int len = r_byte(f);
@@ -143,15 +149,16 @@ static void* r_object(pyc_file* f) {
         object_print(1, name);
 
         // Of course it should return a Code Object in future.
-        // but temporarily return a tuple for memory leak test.
-        Object* ret = tuple_new(7);
-        tuple_set(ret, 0, (Object*) code);
-        tuple_set(ret, 1, (Object*) consts);
-        tuple_set(ret, 2, (Object*) names);
-        tuple_set(ret, 3, (Object*) localsplusnames);
-        tuple_set(ret, 4, (Object*) localspluskinds);
-        tuple_set(ret, 5, (Object*) filename);
-        tuple_set(ret, 6, (Object*) name);
+        // but temporarily return a list for memory leak test.
+        Object* ret = list_new(4);
+        list_append(ret, (Object*) code);
+        list_append(ret, (Object*) consts);
+        list_append(ret, (Object*) names);
+        list_append(ret, (Object*) localsplusnames);
+        list_append(ret, (Object*) localspluskinds);
+        list_append(ret, (Object*) filename);
+        list_append(ret, (Object*) name);
+
         return ret;
 
         break;

@@ -1,0 +1,22 @@
+#ifndef LIST_OBJECT_H
+#define LIST_OBJECT_H
+
+#include "object.h"
+
+
+typedef struct {
+    Object base;
+    Object** items;
+    int len;
+    int capacity;
+} ListObject;
+
+extern TypeObject type_list;
+
+Object* list_new(int n);
+int list_set(Object* list, int index, Object* o);
+Object* list_get(Object* list, int index);
+void list_append(Object* list, Object* o);
+// void list_insert(Object* list, int index, Object* o);
+
+#endif
