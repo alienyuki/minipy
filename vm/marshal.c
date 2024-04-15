@@ -4,6 +4,7 @@
 #include "long_object.h"
 #include "none_object.h"
 #include "list_object.h"
+#include "code_object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -160,23 +161,54 @@ static void* r_object(pyc_file* f) {
         object_print(1, name);
         void* qualname = r_object(f);
         object_print(1, qualname);
+        int firstlineno = r_long(f);
+        printf("firstlineno %d\n", firstlineno);
+        fflush(stdout);
+        void* linetable = r_object(f);
+        object_print(1, linetable);
+        void* exceptiontable = r_object(f);
+        object_print(1, exceptiontable);
 
 
-        // Of course it should return a Code Object in future.
-        // but temporarily return a list for memory leak test.
 
-        ret = list_new(4);
-        list_append(ret, (Object*) code);
-        list_append(ret, (Object*) consts);
-        list_append(ret, (Object*) names);
-        list_append(ret, (Object*) localsplusnames);
-        list_append(ret, (Object*) localspluskinds);
-        list_append(ret, (Object*) filename);
-        list_append(ret, (Object*) name);
-        list_append(ret, (Object*) qualname);
+        CodeCons code_con = {
+            .filename = filename,
+            .name     = name,
+            .qualname = qualname,
+            .flags    = flags,
+            .code = code,
+            .firstlineno = firstlineno,
+            .linetable = linetable,
+            .consts = consts,
+            .names = names,
+            .localsplusnames = localsplusnames,
+            .localspluskinds = localspluskinds,
+            .argcount = argcount,
+            .posonlyargcount = posonlyargcount,
+            .kwonlyargcount = kwonlyargcount,
+            .stacksize = stacksize,
+            .exceptiontable = exceptiontable,
+        };
+
+        CodeObject* code_obj = init_code(&code_con);
+        // insert code_obj to ref
 
         printf("%d\n", reserve_idx);
         object_print(1, (Object*) f->refs);
+
+        ret = (Object*) code_obj;
+
+        DECREF(code);
+        DECREF(consts);
+        DECREF(names);
+        DECREF(localsplusnames);
+        DECREF(localspluskinds);
+        DECREF(filename);
+        DECREF(name);
+        DECREF(qualname);
+        DECREF(linetable);
+        DECREF(exceptiontable);
+
         break;
     }
 
