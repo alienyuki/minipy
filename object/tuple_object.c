@@ -67,3 +67,9 @@ int tuple_set(Object* tuple, int index, Object* o) {
     t->items[index] = o;
     return 0;
 }
+
+Object* tuple_get(Object* tuple, int index) {
+    assert(tuple->type == &type_tuple);
+    TupleObject* t = (TupleObject*) tuple;
+    return t->items[index];
+}

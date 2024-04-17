@@ -8,7 +8,7 @@
 typedef struct {
     FrameObject* frame;
     uint8_t* pc;
-    void* fun;
+    Object** sp;
 } pvm;
 
 int pvm_run(pvm* vm, CodeObject* code);

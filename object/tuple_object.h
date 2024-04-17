@@ -15,5 +15,6 @@ extern TypeObject type_tuple;
 
 Object* tuple_new(int size);
 int tuple_set(Object* tuple, int index, Object* o);
+Object* tuple_get(Object* tuple, int index);
 
 #endif

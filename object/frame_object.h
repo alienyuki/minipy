@@ -8,6 +8,7 @@ extern TypeObject type_frame;
 typedef struct {
     Object base;
     Object* code;
+    Object* localsplus[];
 } FrameObject;
 
 Object* init_frame(Object* code);

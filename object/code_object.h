@@ -8,7 +8,9 @@
 typedef struct {
     Object base;
     int size;
-
+    Object* consts;
+    int stack_size;
+    Object* localsplusnames;
     uint8_t bytecodes[];
 } CodeObject;
 

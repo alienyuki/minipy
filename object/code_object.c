@@ -15,12 +15,17 @@ TypeObject type_code = {
     .str = code_str,
 };
 
-CodeObject* init_code(CodeCons* CodeCons) {
-    StrObject* bytecodes = (StrObject*) CodeCons->code;
+CodeObject* init_code(CodeCons* code_cons) {
+    StrObject* bytecodes = (StrObject*) code_cons->code;
     CodeObject* code = malloc(sizeof(CodeObject) + bytecodes->size * sizeof(uint8_t));
     code->base.type = &type_code;
     code->base.refcnt = 1;
     code->size = bytecodes->size;
+    code->consts = code_cons->consts;
+    INCREF(code->consts);
+    code->stack_size = code_cons->stacksize;
+    code->localsplusnames = code_cons->localsplusnames;
+    INCREF(code->localsplusnames);
 
     memcpy(code->bytecodes, bytecodes->str, bytecodes->size);
     return code;
@@ -33,5 +38,8 @@ static Object* code_str(Object* obj) {
 }
 
 static void code_destr(Object* obj) {
+    CodeObject* code = (CodeObject*) obj;
+    DECREF(code->consts);
+    DECREF(code->localsplusnames);
     free(obj);
 }
