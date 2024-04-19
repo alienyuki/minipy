@@ -22,10 +22,16 @@ test/test_marshal.o: test/test_marshal.c
 test/test_vm.o: test/test_vm.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
 
+test/test_dict.o: test/test_dict.c
+	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
+
 test/test_marshal: test/test_marshal.o vm/marshal.o $(OBJ_OFILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
 test/test_vm: test/test_vm.o vm/marshal.o vm/vm.o $(OBJ_OFILES)
+	$(CC) $(CFLAGS) $^ -o $@
+
+test/test_dict: test/test_dict.o $(OBJ_OFILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
@@ -33,4 +39,5 @@ clean:
 	rm -f test/*.o
 	rm -f test/test_marshal
 	rm -f test/test_vm
+	rm -f test/test_dict
 	rm -f vm/*.o

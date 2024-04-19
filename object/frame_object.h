@@ -2,15 +2,16 @@
 #define FRAME_OBJECT_H
 
 #include "object.h"
+#include "code_object.h"
 
 extern TypeObject type_frame;
 
 typedef struct {
     Object base;
-    Object* code;
+    CodeObject* code;
     Object* localsplus[];
 } FrameObject;
 
-Object* init_frame(Object* code);
+FrameObject* init_frame(CodeObject* code);
 
 #endif

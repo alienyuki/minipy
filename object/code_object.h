@@ -2,6 +2,7 @@
 #define CODE_OBJECT_H
 
 #include "object.h"
+#include "tuple_object.h"
 #include <stdint.h>
 
 
@@ -10,7 +11,7 @@ typedef struct {
     int size;
     Object* consts;
     int stack_size;
-    Object* localsplusnames;
+    TupleObject* localsplusnames;
     uint8_t bytecodes[];
 } CodeObject;
 
@@ -33,7 +34,7 @@ typedef struct {
     Object *names;
 
     /* mapping frame offsets to information */
-    Object *localsplusnames;  // Tuple of strings
+    TupleObject *localsplusnames;  // Tuple of strings
     Object *localspluskinds;  // Bytes object, one byte per variable
 
     /* args (within varnames) */

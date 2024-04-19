@@ -10,6 +10,10 @@ void object_print(int fd, Object* o) {
     DECREF(s);
 }
 
+hash_t object_hash(Object* o) {
+    return o->type->hash(o);
+}
+
 void inc_ref(Object* o) {
     if (o->refcnt != IMMORTAL_REF) {
         o->refcnt += 1;

@@ -12,13 +12,13 @@ TypeObject type_frame = {
 };
 
 
-Object* init_frame(Object* code) {
-    int stack_size = ((CodeObject*) code)->stack_size;
+FrameObject* init_frame(CodeObject* code) {
+    int stack_size = code->stack_size;
     FrameObject* frame = malloc(sizeof(FrameObject) + stack_size * sizeof(Object*));
     frame->base.refcnt = 1;
     frame->base.type = &type_frame;
     frame->code = code;
-    return (Object*) frame;
+    return frame;
 }
 
 static void frame_destr(Object* obj) {

@@ -1,4 +1,5 @@
 .vscode/
 test/test_marshal
 test/test_vm
+test/test_dict
 *.o

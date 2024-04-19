@@ -8,12 +8,11 @@
 #include <stdio.h>
 
 int pvm_run(pvm* vm, CodeObject* code) {
-    FrameObject* frame = (FrameObject*) init_frame((Object*) code);
+    FrameObject* frame = init_frame(code);
     int err = 0;
     vm->frame = frame;
-    vm->pc = ((CodeObject*) frame->code)->bytecodes;
-    object_print(1, code->localsplusnames);
-    int nlocalsplus = ((TupleObject*) code->localsplusnames)->size;
+    vm->pc = frame->code->bytecodes;
+    int nlocalsplus = code->localsplusnames->size;
     vm->sp = frame->localsplus + nlocalsplus;
     printf("frame stack header: %d\n", nlocalsplus);
 
@@ -25,7 +24,7 @@ int pvm_run(pvm* vm, CodeObject* code) {
         }
 
         case LOAD_CONST: {
-            CodeObject* c = (CodeObject*) frame->code;
+            CodeObject* c = frame->code;
             Object* v = tuple_get(c->consts, *(vm->pc + 1));
             object_print(1, v);
             INCREF(v);

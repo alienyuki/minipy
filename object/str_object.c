@@ -6,11 +6,13 @@
 
 static Object* string_str(Object* obj);
 static void string_destr(Object* obj);
+static hash_t string_hash(Object* obj);
 
 TypeObject type_string = {
     .name = "string",
     .str  = string_str,
     .destr = string_destr,
+    .hash = string_hash,
 };
 
 static void string_destr(Object* obj) {
@@ -31,4 +33,8 @@ Object* string_new(uint8_t* s, int size) {
 static Object* string_str(Object* obj) {
     INCREF(obj);
     return obj;
+}
+
+static hash_t string_hash(Object* obj) {
+    return 114514;
 }
