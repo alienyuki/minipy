@@ -2,6 +2,7 @@
 #include "dict_object.h"
 #include "str_object.h"
 #include "long_object.h"
+#include <stdio.h>
 
 int main() {
     DictObject* d = (DictObject*) dict_new();
@@ -20,6 +21,19 @@ int main() {
 
     dict_set(d, s2, l3);
     object_print(1, (Object*) d);
+
+    Object* v1 = dict_get(d, s1);
+    object_print(1, (Object*) v1);
+    printf("\nsize: %d\n", d->nitems);
+
+    Object* pop_v = dict_pop(d, s2);
+    object_print(1, (Object*) d);
+    object_print(1, (Object*) pop_v);
+    DECREF(pop_v);
+
+    dict_del(d, s1);
+    object_print(1, (Object*) d);
+    printf("\nsize: %d\n", d->nitems);
 
     DECREF(s1);
     DECREF(s2);

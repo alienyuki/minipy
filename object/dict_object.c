@@ -36,17 +36,76 @@ Object* dict_new() {
 
 
 Object* dict_get(DictObject* dict, Object* key) {
+    hash_t hash = object_hash(key);
+    hash &= dict->nentries - 1;
+    DictEntry* e = &(dict->entries[hash]);
+
+    if (e->key == NULL) {
+        return NULL;
+    }
+
+    while (e->next != NULL) {
+        if (object_compare(e->key, key, CMP_EQ)) {
+            return e->value;
+        }
+        e = e->next;
+    }
+
+    if (object_compare(e->key, key, CMP_EQ)) {
+        return e->value;
+    }
 
     return NULL;
 }
 
 Object* dict_pop(DictObject* dict, Object* key) {
+    hash_t hash = object_hash(key);
+    hash &= dict->nentries - 1;
+    DictEntry* e = &(dict->entries[hash]);
+
+    if (e->key == NULL) {
+        return NULL;
+    }
+
+    if (object_compare(e->key, key, CMP_EQ)) {
+        Object* ret = e->value;
+        DECREF(e->key);
+
+        if (e->next != NULL) {
+            e->key = e->next->key;
+            e->value = e->next->value;
+            DictEntry* tmp = e->next;
+            e->next = tmp->next;
+            free(tmp);
+        } else {
+            e->key = NULL;
+            e->value = NULL;
+        }
+        dict->nitems -= 1;
+        return ret;
+    }
+
+    while (e->next != NULL) {
+        DictEntry* cur = e;
+        e = e->next;
+        if (object_compare(e->key, key, CMP_EQ)) {
+            Object* ret = e->value;
+            DECREF(e->key);
+            cur->next = e->next;
+            free(e);
+            dict->nitems -= 1;
+            return ret;
+        }
+    }
+
     return NULL;
 }
 
 void dict_del(DictObject* dict, Object* key) {
     Object* ret = dict_pop(dict, key);
-    DECREF(ret);
+    if (ret != NULL) {
+        DECREF(ret);
+    }
 }
 
 
