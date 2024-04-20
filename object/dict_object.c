@@ -29,7 +29,7 @@ Object* dict_new() {
     ret->base.refcnt = 1;
     ret->base.type = &type_dict;
     ret->nitems = 0;
-    ret->nentries = 8;
+    ret->nentries = INITAIL_SIZE;
 
     return (Object*) ret;
 }
@@ -54,38 +54,41 @@ int dict_set(DictObject* dict, Object* key, Object* value) {
     hash_t hash = object_hash(key);
     hash &= dict->nentries - 1;
     DictEntry* e = &(dict->entries[hash]);
-    
+
     if (e->key == NULL) {
+        INCREF(key);
+        INCREF(value);
         e->key = key;
+        e->value = value;
+        dict->nitems += 1;
+        return 0;
+    }
+
+    while (e->next != NULL) {
+        if (object_compare(e->key, key, CMP_EQ)) {
+            INCREF(value);
+            DECREF(e->value);
+            e->value = value;
+            return 0;
+        }
+        e = e->next;
+    }
+
+    if (object_compare(e->key, key, CMP_EQ)) {
+        INCREF(value);
+        DECREF(e->value);
         e->value = value;
         return 0;
     }
 
-    /*
-        TODO: eq
-        if (e->key EQ key) {
-            DECREF(e->value);
-            e->value = value;
-            return 0;
-        }
-    */
-
-    while (e->next != NULL) {
-    /*
-        TODO: eq
-        if (e->key EQ key) {
-            DECREF(e->value);
-            e->value = value;
-            return 0;
-        }
-    */
-        e = e->next;
-    }
-
+    // maybe use pool instead of directerly malloc to reduce fragmentation
     e->next = malloc(sizeof(DictEntry));
     e = e->next;
+    INCREF(key);
+    INCREF(value);
     e->key = key;
     e->value = value;
+    dict->nitems += 1;
     e->next = NULL;
 
     return 0;
@@ -139,10 +142,24 @@ static Object* dict_str(Object* obj) {
 }
 
 static void dict_destr(Object* obj) {
-    // TODO:
-    // 1. destroy items in entries (link-list)
-    // 2. destroy entries
-    // 3. destroy obj
+    DictObject* dict = (DictObject*) obj;
+
+    for (int i = 0; i < dict->nentries; i++) {
+        DictEntry* e1 = &dict->entries[i];
+        DictEntry* e2 = e1->next;
+        if (e1->key != NULL) {
+            DECREF(e1->key);
+            DECREF(e1->value);
+        }
+        while (e2 != NULL) {
+            e1 = e2;
+            e2 = e2->next;
+            DECREF(e1->key);
+            DECREF(e1->value);
+            free(e1);
+        }
+    }
+
+    free(dict->entries);
+    free(dict);
 }
-
-
