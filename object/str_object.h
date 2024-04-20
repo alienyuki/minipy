@@ -14,5 +14,6 @@ typedef struct {
 extern TypeObject type_string;
 
 Object* string_new(uint8_t* s, int size);
+#define string_new_cstr(s) string_new((uint8_t*) s, sizeof(s) - 1)
 
 #endif
