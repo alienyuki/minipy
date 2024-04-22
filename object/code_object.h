@@ -9,9 +9,10 @@
 typedef struct {
     Object base;
     int size;
-    Object* consts;
+    TupleObject* consts;
     int stack_size;
     TupleObject* localsplusnames;
+    TupleObject* names;
     uint8_t bytecodes[];
 } CodeObject;
 
@@ -30,8 +31,8 @@ typedef struct {
     Object *linetable;
 
     /* used by the code */
-    Object *consts;
-    Object *names;
+    TupleObject *consts;
+    TupleObject *names;
 
     /* mapping frame offsets to information */
     TupleObject *localsplusnames;  // Tuple of strings

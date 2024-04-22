@@ -4,9 +4,11 @@
 #include "object.h"
 #include "code_object.h"
 #include "frame_object.h"
+#include "dict_object.h"
 
 typedef struct {
     FrameObject* frame;
+    DictObject* globals;
     uint8_t* pc;
     Object** sp;
 } pvm;

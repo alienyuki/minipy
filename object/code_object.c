@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 
 static Object* code_str(Object* obj);
@@ -26,6 +27,8 @@ CodeObject* init_code(CodeCons* code_cons) {
     code->stack_size = code_cons->stacksize;
     code->localsplusnames = code_cons->localsplusnames;
     INCREF(code->localsplusnames);
+    code->names = code_cons->names;
+    INCREF(code->names);
 
     memcpy(code->bytecodes, bytecodes->str, bytecodes->size);
     return code;
@@ -41,5 +44,6 @@ static void code_destr(Object* obj) {
     CodeObject* code = (CodeObject*) obj;
     DECREF(code->consts);
     DECREF(code->localsplusnames);
+    DECREF(code->names);
     free(obj);
 }
