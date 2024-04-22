@@ -2,6 +2,7 @@
 #include "str_object.h"
 
 #include <unistd.h>
+#include <stdio.h>
 
 void object_print(int fd, Object* o) {
     StrObject* s = (StrObject*) o->type->str(o);
@@ -38,4 +39,13 @@ void dec_ref(Object* o) {
     if (o->refcnt == 0) {
         o->type->destr(o);
     }
+}
+
+Object* object_binary_add(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        printf("Not implement yet %s:%d\n", __FILE__, __LINE__);
+        __builtin_unreachable();
+    }
+
+    return o1->type->num->add_func(o1, o2);
 }

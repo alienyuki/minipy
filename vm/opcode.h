@@ -3,7 +3,12 @@
 
 #define STORE_NAME 90
 #define LOAD_CONST 100
+#define LOAD_NAME 101
 #define RETURN_CONST 121
+#define BINARY_OP 122
 #define RESUME 151
+
+
+#define BINOP_ADD 0
 
 #endif

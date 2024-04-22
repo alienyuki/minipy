@@ -5,7 +5,8 @@
 #include <stdio.h>
 
 int main() {
-    Object* code_obj = unmarshal_pyc("test/__pycache__/number.cpython-312.pyc");
+    Object* code_obj = unmarshal_pyc("test/__pycache__/add.cpython-312.pyc");
+    // Object* code_obj = unmarshal_pyc("test/__pycache__/number.cpython-312.pyc");
 
     printf("\n\n-------- vm start --------\n\n");
 

@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
+static binary_op_func binary_ops[] = {
+    [BINOP_ADD] = object_binary_add,
+};
+
 static int pvm_run_frame(pvm* vm) {
     if (vm == NULL) {
         return 0;
@@ -45,6 +49,34 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case LOAD_NAME: {
+            uint8_t arg = *(vm->pc + 1);
+            Object* name = tuple_get(frame->code->names, arg);
+            Object* v = dict_get(frame->locals, name);
+            INCREF(v);
+            vm->sp += 1;
+            vm->sp[-1] = v;
+            vm->pc += 2;
+            break;
+        }
+
+        case BINARY_OP: {
+            uint8_t arg = *(vm->pc + 1);
+            Object* v2 = vm->sp[-1];
+            vm->sp -= 1;
+            Object* v1 = vm->sp[-1];
+            vm->sp -= 1;
+            object_print(1, v1);
+            object_print(1, v2);
+            Object* v = binary_ops[arg](v1, v2);
+            vm->sp += 1;
+            vm->sp[-1] = v;
+            DECREF(v1);
+            DECREF(v2);
+            vm->pc += 4;
+            break;
+        }
+
         case RETURN_CONST: {
             object_print(1, (Object*) frame->locals);
             Object* retval = tuple_get(frame->code->consts, *(vm->pc + 1));
@@ -55,6 +87,10 @@ static int pvm_run_frame(pvm* vm) {
             // set vm->frame to prev_frame
             // destroy current frame
             // push retval to prev_frame's stack
+
+            // maybe use this to free stack?
+            // Object** f = frame->localsplus + frame->code->localsplusnames->size;
+            // while (f < sp) DECREF(*f)
 
             vm->frame = vm->frame->prev_frame;
             DECREF(frame);

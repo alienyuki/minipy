@@ -16,10 +16,16 @@ typedef enum {
     CMP_GE,
 } cmp_op;
 
+
+typedef Object* (*binary_op_func)(Object*, Object*);
+
 typedef Object* (*str_func)(Object*);
 typedef void (*destr_func)(Object*);
 typedef hash_t (*hash_func)(Object*);
 typedef int (*compare_func)(Object*, Object*, cmp_op);
+typedef struct {
+    binary_op_func add_func;
+} number_methods;
 
 struct Object {
     int refcnt;
@@ -33,6 +39,7 @@ struct TypeObject {
     destr_func destr;
     hash_func hash;
     compare_func cmp;
+    number_methods* num;
 };
 
 
@@ -47,5 +54,7 @@ void dec_ref(Object* o);
 
 #define INCREF(o) inc_ref((Object*) o)
 #define DECREF(o) dec_ref((Object*) o)
+
+Object* object_binary_add(Object* o1, Object* o2);
 
 #endif
