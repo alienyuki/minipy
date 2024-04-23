@@ -1,4 +1,6 @@
 #include "str_object.h"
+#include "bool_object.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -7,7 +9,7 @@
 static Object* string_str(Object* obj);
 static void string_destr(Object* obj);
 static hash_t string_hash(Object* obj);
-static int string_cmp(Object* o1, Object* o2, cmp_op op);
+static Object* string_cmp(Object* o1, Object* o2, cmp_op op);
 
 TypeObject type_string = {
     .name = "string",
@@ -49,20 +51,20 @@ static hash_t string_hash(Object* obj) {
     return hash;
 }
 
-static int string_cmp(Object* o1, Object* o2, cmp_op op) {
+static Object* string_cmp(Object* o1, Object* o2, cmp_op op) {
     StrObject* s1 = (StrObject*) o1;
     StrObject* s2 = (StrObject*) o2;
     if (op == CMP_EQ) {
         if (s1->size != s2->size) {
-            return 0;
+            return false_new();
         }
 
         for (int i = 0; i < s1->size; i++) {
             if (s1->str[i] != s2->str[i]) {
-                return 0;
+                return false_new();
             }
         }
-        return 1;
+        return true_new();
     }
 
     __builtin_unreachable();

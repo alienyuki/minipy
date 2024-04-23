@@ -2,6 +2,7 @@
 #include "object.h"
 #include "frame_object.h"
 #include "tuple_object.h"
+#include "bool_object.h"
 #include "opcode.h"
 
 #include <stdlib.h>
@@ -57,6 +58,45 @@ static int pvm_run_frame(pvm* vm) {
             vm->sp += 1;
             vm->sp[-1] = v;
             vm->pc += 2;
+            break;
+        }
+
+        case COMPARE_OP: {
+            uint8_t arg = *(vm->pc + 1);
+            Object* v2 = vm->sp[-1];
+            vm->sp -= 1;
+            Object* v1 = vm->sp[-1];
+            vm->sp -= 1;
+
+            Object* result = object_compare(v1, v2, arg >> 4);
+
+            vm->sp += 1;
+            vm->sp[-1] = result;
+            DECREF(v1);
+            DECREF(v2);
+            vm->pc += 4;
+            break;
+        }
+
+        case JUMP_FORWARD: {
+            uint8_t arg = *(vm->pc + 1);
+            vm->pc += arg * 2 + 2;
+
+            break;
+        }
+
+        case POP_JUMP_IF_FALSE: {
+            Object* stack_top = vm->sp[-1];
+            uint8_t arg = *(vm->pc + 1);
+
+            if (stack_top == true_new()) {
+                vm->pc += 2;
+            } else {
+                vm->pc += arg * 2 + 2;
+            }
+
+            vm->sp -= 1;
+            DECREF(stack_top);
             break;
         }
 

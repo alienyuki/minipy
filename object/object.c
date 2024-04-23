@@ -15,7 +15,7 @@ hash_t object_hash(Object* o) {
     return o->type->hash(o);
 }
 
-int object_compare(Object* o1, Object* o2, cmp_op op) {
+Object* object_compare(Object* o1, Object* o2, cmp_op op) {
     if (o1->type == o2->type) {
         return o1->type->cmp(o1, o2, op);
     }

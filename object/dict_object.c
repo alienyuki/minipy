@@ -1,5 +1,6 @@
 #include "dict_object.h"
 #include "str_object.h"
+#include "bool_object.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -45,13 +46,13 @@ Object* dict_get(DictObject* dict, Object* key) {
     }
 
     while (e->next != NULL) {
-        if (object_compare(e->key, key, CMP_EQ)) {
+        if (object_compare(e->key, key, CMP_EQ) == true_new()) {
             return e->value;
         }
         e = e->next;
     }
 
-    if (object_compare(e->key, key, CMP_EQ)) {
+    if (object_compare(e->key, key, CMP_EQ) == true_new()) {
         return e->value;
     }
 
@@ -67,7 +68,7 @@ Object* dict_pop(DictObject* dict, Object* key) {
         return NULL;
     }
 
-    if (object_compare(e->key, key, CMP_EQ)) {
+    if (object_compare(e->key, key, CMP_EQ) == true_new()) {
         Object* ret = e->value;
         DECREF(e->key);
 
@@ -88,7 +89,7 @@ Object* dict_pop(DictObject* dict, Object* key) {
     while (e->next != NULL) {
         DictEntry* cur = e;
         e = e->next;
-        if (object_compare(e->key, key, CMP_EQ)) {
+        if (object_compare(e->key, key, CMP_EQ) == true_new()) {
             Object* ret = e->value;
             DECREF(e->key);
             cur->next = e->next;
@@ -124,7 +125,7 @@ int dict_set(DictObject* dict, Object* key, Object* value) {
     }
 
     while (e->next != NULL) {
-        if (object_compare(e->key, key, CMP_EQ)) {
+        if (object_compare(e->key, key, CMP_EQ) == true_new()) {
             INCREF(value);
             DECREF(e->value);
             e->value = value;
@@ -133,7 +134,7 @@ int dict_set(DictObject* dict, Object* key, Object* value) {
         e = e->next;
     }
 
-    if (object_compare(e->key, key, CMP_EQ)) {
+    if (object_compare(e->key, key, CMP_EQ) == true_new()) {
         INCREF(value);
         DECREF(e->value);
         e->value = value;
