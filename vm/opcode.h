@@ -9,9 +9,11 @@
 #define POP_JUMP_IF_FALSE 114
 #define RETURN_CONST 121
 #define BINARY_OP 122
+#define JUMP_BACKWARD 140
 #define RESUME 151
 
 
 #define BINOP_ADD 0
+#define BINOP_IADD 13
 
 #endif

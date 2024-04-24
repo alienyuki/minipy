@@ -11,6 +11,7 @@
 
 static binary_op_func binary_ops[] = {
     [BINOP_ADD] = object_binary_add,
+    [BINOP_IADD] = object_binary_iadd,
 };
 
 static int pvm_run_frame(pvm* vm) {
@@ -30,7 +31,6 @@ static int pvm_run_frame(pvm* vm) {
         case LOAD_CONST: {
             CodeObject* c = frame->code;
             Object* v = tuple_get(c->consts, *(vm->pc + 1));
-            object_print(1, v);
             INCREF(v);
             vm->sp += 1;
             vm->sp[-1] = v;
@@ -106,8 +106,6 @@ static int pvm_run_frame(pvm* vm) {
             vm->sp -= 1;
             Object* v1 = vm->sp[-1];
             vm->sp -= 1;
-            object_print(1, v1);
-            object_print(1, v2);
             Object* v = binary_ops[arg](v1, v2);
             vm->sp += 1;
             vm->sp[-1] = v;
@@ -138,6 +136,13 @@ static int pvm_run_frame(pvm* vm) {
             object_print(1, retval);
             vm->pc += 2;
             goto done;
+        }
+
+        case JUMP_BACKWARD: {
+            uint8_t arg = *(vm->pc + 1);
+            vm->pc -= arg * 2;
+            vm->pc += 2;
+            break;
         }
 
         default: {

@@ -12,9 +12,11 @@ static void long_destr(Object* obj);
 static Object* long_cmp(Object* o1, Object* o2, cmp_op op);
 
 static Object* long_add_func(Object* o1, Object* o2);
+static Object* long_iadd_func(Object* o1, Object* o2);
 
 static number_methods long_number_method = {
     .add_func = long_add_func,
+    .iadd_func = long_iadd_func,
 };
 
 
@@ -54,7 +56,6 @@ static Object* long_cmp(Object* o1, Object* o2, cmp_op op) {
     LongObject* l2 = (LongObject*) o2;
 
     int diff = l1->n - l2->n;
-    printf("op:  %d, diff: %d\n", op, diff);
     switch (op) {
     case CMP_EQ: {
         if (diff == 0) {
@@ -98,6 +99,15 @@ static Object* long_cmp(Object* o1, Object* o2, cmp_op op) {
 }
 
 static Object* long_add_func(Object* o1, Object* o2) {
+    assert(o1->type == &type_long);
+    assert(o2->type == &type_long);
+    LongObject* l1 = (LongObject*) o1;
+    LongObject* l2 = (LongObject*) o2;
+
+    return long_new(l1->n + l2->n);
+}
+
+static Object* long_iadd_func(Object* o1, Object* o2) {
     assert(o1->type == &type_long);
     assert(o2->type == &type_long);
     LongObject* l1 = (LongObject*) o1;

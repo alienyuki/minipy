@@ -49,3 +49,16 @@ Object* object_binary_add(Object* o1, Object* o2) {
 
     return o1->type->num->add_func(o1, o2);
 }
+
+Object* object_binary_iadd(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        printf("Not implement yet %s:%d\n", __FILE__, __LINE__);
+        __builtin_unreachable();
+    }
+
+    if (o1->type->num->iadd_func != NULL) {
+        return o1->type->num->iadd_func(o1, o2);
+    }
+
+    return o1->type->num->add_func(o1, o2);
+}
