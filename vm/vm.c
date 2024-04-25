@@ -4,7 +4,10 @@
 #include "tuple_object.h"
 #include "bool_object.h"
 #include "opcode.h"
+#include "debugger.h"
 
+
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -119,8 +122,7 @@ static int pvm_run_frame(pvm* vm) {
             object_print(1, (Object*) frame->locals);
             Object* retval = tuple_get(frame->code->consts, *(vm->pc + 1));
             if (frame->prev_frame != NULL) {
-                printf("Not implement yet! %s: %d", __FILE__, __LINE__);
-                __builtin_unreachable();
+                TODO("frame list %d");
             }
             // set vm->frame to prev_frame
             // destroy current frame
@@ -146,8 +148,7 @@ static int pvm_run_frame(pvm* vm) {
         }
 
         default: {
-            printf("opcode: 0x%x is not implement yet\n", *vm->pc);
-            err = 1;
+            TODO("opcode: 0x%x is not implement yet\n", *vm->pc);
             break;
         }
 
