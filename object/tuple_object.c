@@ -71,3 +71,7 @@ int tuple_set(Object* tuple, int index, Object* o) {
 Object* tuple_get(TupleObject* tuple, int index) {
     return tuple->items[index];
 }
+
+int tuple_size(TupleObject* tuple) {
+    return tuple->size;
+}

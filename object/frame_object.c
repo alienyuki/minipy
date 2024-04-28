@@ -14,7 +14,7 @@ TypeObject type_frame = {
 
 
 FrameObject* init_frame(CodeObject* code) {
-    int stack_size = code->stack_size;
+    int stack_size = code->stack_size + tuple_size(code->localsplusnames);
     FrameObject* frame = malloc(sizeof(FrameObject) + stack_size * sizeof(Object*));
     memset(frame, 0, sizeof(FrameObject) + stack_size * sizeof(Object*));
     frame->base.refcnt = 1;
@@ -27,14 +27,7 @@ FrameObject* init_frame(CodeObject* code) {
 
 FrameObject* frame_new(FuncObject* func) {
     CodeObject* code = func->code;
-    int stack_size = code->stack_size;
-    FrameObject* frame = malloc(sizeof(FrameObject) + stack_size * sizeof(Object*));
-    memset(frame, 0, sizeof(FrameObject) + stack_size * sizeof(Object*));
-    frame->base.refcnt = 1;
-    frame->base.type = &type_frame;
-    frame->code = code;
-    INCREF(frame->code);
-    frame->locals = NULL;
+    FrameObject* frame = init_frame(code);
     frame->func = func;
     INCREF(func);
     return frame;

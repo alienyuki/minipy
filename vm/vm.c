@@ -28,7 +28,8 @@ static int pvm_run_frame(pvm* vm) {
     uint8_t* p = vm->pc;
     int err = 0;
     while (!err) {
-        printf("pc: %ld\n", vm->pc - p);
+        printf("pc: %ld, sp: %p\n", vm->pc - p, vm->sp);
+
         switch (*vm->pc) {
         case POP_TOP: {
             Object* top = vm->sp[-1];
@@ -42,6 +43,36 @@ static int pvm_run_frame(pvm* vm) {
             vm->sp += 1;
             vm->sp[-1] = NULL;
             vm->pc += 2;
+            break;
+        }
+
+        case RETURN_VALUE: {
+            Object* retval = vm->sp[-1];
+            vm->sp -= 1;
+
+            printf("sp: %p, bottom: %p\n", vm->sp, frame->localsplus);
+            while (vm->sp > frame->localsplus) {
+                DECREF(vm->sp[-1]);
+                vm->sp -= 1;
+            }
+            // Object** f = frame->localsplus + frame->code->localsplusnames->size;
+            // while (f < sp) DECREF(*f)
+
+            vm->frame = vm->frame->prev_frame;
+            DECREF(frame);
+            frame = vm->frame;
+            if (vm->frame == NULL) {
+                goto done;
+            }
+
+            vm->pc = frame->pc - 2;
+            vm->sp = frame->sp;
+            printf("after sp: %p\nretval\n", vm->sp);
+            object_print(1, retval);
+            vm->sp += 1;
+            vm->sp[-1] = retval;
+            vm->pc += 2;
+            p = frame->code->bytecodes;
             break;
         }
 
@@ -138,6 +169,33 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case LOAD_FAST: {
+            uint8_t arg = *(vm->pc + 1);
+            Object* v = frame->localsplus[arg];
+            INCREF(v);
+            vm->sp += 1;
+            vm->sp[-1] = v;
+            vm->pc += 2;
+            break;
+        }
+
+        case STORE_FAST: {
+
+            uint8_t arg = *(vm->pc + 1);
+            Object* v = vm->sp[-1];
+            vm->sp -= 1;
+
+            Object* old = frame->localsplus[arg];
+
+            frame->localsplus[arg] = v;
+            if (old != NULL) {
+                DECREF(old);
+            }
+
+            vm->pc += 2;
+            break;
+        }
+
         case RETURN_CONST: {
             object_print(1, (Object*) frame->locals);
             Object* retval = tuple_get(frame->code->consts, *(vm->pc + 1));
@@ -146,9 +204,10 @@ static int pvm_run_frame(pvm* vm) {
             // destroy current frame
             // push retval to prev_frame's stack
 
-            // maybe use this to free stack?
-            // Object** f = frame->localsplus + frame->code->localsplusnames->size;
-            // while (f < sp) DECREF(*f)
+            while (vm->sp > frame->localsplus) {
+                DECREF(vm->sp[-1]);
+                vm->sp -= 1;
+            }
 
             vm->frame = vm->frame->prev_frame;
             DECREF(frame);
@@ -165,6 +224,7 @@ static int pvm_run_frame(pvm* vm) {
             vm->sp += 1;
             vm->sp[-1] = retval;
             vm->pc += 2;
+            p = frame->code->bytecodes;
             break;
         }
 
@@ -209,10 +269,18 @@ static int pvm_run_frame(pvm* vm) {
             object_print(1, callable);
             FrameObject* new_frame = (FrameObject*) frame_new((FuncObject*) callable);
             new_frame->locals = (DictObject*) dict_new();
+
             // fill_args()
             // TODO
-            // After fill func args, pop the stack, which contains method, callable, and args
-            for (int i = 0; i < 2 + arg; i++) {
+            for (int i = 0; i < arg; i++) {
+                object_print(1, vm->sp[-1]);
+                new_frame->localsplus[arg - 1 - i] = vm->sp[-1];
+                object_print(1, new_frame->localsplus[arg - 1 - i]);
+                vm->sp -= 1;
+            }
+
+            // After fill func args, pop the stack(method and callable).
+            for (int i = 0; i < 2; i++) {
                 if (vm->sp[-1] != NULL) {
                     DECREF(vm->sp[-1]);
                 }
@@ -222,20 +290,19 @@ static int pvm_run_frame(pvm* vm) {
             // save current frame
             vm->frame->pc = vm->pc + 8; // should point to next instr
             vm->frame->sp = vm->sp;
-            // sp should minus args
-            printf("before sp!! %p\n\n", vm->sp);
 
             // set frame on link list
             new_frame->next_frame = NULL;
             new_frame->prev_frame = vm->frame;
             vm->frame->next_frame = new_frame;
             int nlocalsplus = new_frame->code->localsplusnames->size;
-            vm->sp = frame->localsplus + nlocalsplus;
 
             vm->frame = new_frame;
             frame = vm->frame;
 
+            vm->sp = frame->localsplus + nlocalsplus;
             vm->pc = frame->code->bytecodes;
+            p = vm->pc;
             break;
         }
 
