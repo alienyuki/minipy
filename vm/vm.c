@@ -16,6 +16,8 @@
 
 static binary_op_func binary_ops[] = {
     [BINOP_ADD] = object_binary_add,
+    [BINOP_FDIV] = object_binary_fdiv,
+    [BINOP_REMINDER] = object_binary_remainder,
     [BINOP_IADD] = object_binary_iadd,
 };
 
@@ -28,7 +30,9 @@ static int pvm_run_frame(pvm* vm) {
     uint8_t* p = vm->pc;
     int err = 0;
     while (!err) {
-        printf("pc: %ld, sp: %p\n", vm->pc - p, vm->sp);
+        if (!p) {
+            printf("pc: %ld, sp: %p\n", vm->pc - p, vm->sp);
+        }
 
         switch (*vm->pc) {
         case POP_TOP: {
@@ -67,7 +71,6 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->pc = frame->pc - 2;
             vm->sp = frame->sp;
-            printf("after sp: %p\nretval\n", vm->sp);
             object_print(1, retval);
             vm->sp += 1;
             vm->sp[-1] = retval;
@@ -197,6 +200,7 @@ static int pvm_run_frame(pvm* vm) {
         }
 
         case RETURN_CONST: {
+            printf("\n");
             object_print(1, (Object*) frame->locals);
             Object* retval = tuple_get(frame->code->consts, *(vm->pc + 1));
 
@@ -218,7 +222,6 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->pc = frame->pc - 2;
             vm->sp = frame->sp;
-            printf("after sp: %p\nretval\n", vm->sp);
             object_print(1, retval);
             INCREF(retval);
             vm->sp += 1;
@@ -273,7 +276,6 @@ static int pvm_run_frame(pvm* vm) {
             // fill_args()
             // TODO
             for (int i = 0; i < arg; i++) {
-                object_print(1, vm->sp[-1]);
                 new_frame->localsplus[arg - 1 - i] = vm->sp[-1];
                 object_print(1, new_frame->localsplus[arg - 1 - i]);
                 vm->sp -= 1;

@@ -25,6 +25,8 @@ typedef hash_t (*hash_func)(Object*);
 typedef Object* (*compare_func)(Object*, Object*, cmp_op);
 typedef struct {
     binary_op_func add_func;
+    binary_op_func fdiv_func;
+    binary_op_func remainder_func;
     binary_op_func iadd_func;
 } number_methods;
 
@@ -57,6 +59,8 @@ void dec_ref(Object* o);
 #define DECREF(o) dec_ref((Object*) o)
 
 Object* object_binary_add(Object* o1, Object* o2);
+Object* object_binary_fdiv(Object* o1, Object* o2);
+Object* object_binary_remainder(Object* o1, Object* o2);
 Object* object_binary_iadd(Object* o1, Object* o2);
 
 #endif

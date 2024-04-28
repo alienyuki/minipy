@@ -1,5 +1,6 @@
 #include "object.h"
 #include "str_object.h"
+#include "debugger.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -21,7 +22,7 @@ Object* object_compare(Object* o1, Object* o2, cmp_op op) {
     }
 
     // incomplete implementation
-    __builtin_unreachable();
+    TODO("different types compare");
 }
 
 void inc_ref(Object* o) {
@@ -43,17 +44,31 @@ void dec_ref(Object* o) {
 
 Object* object_binary_add(Object* o1, Object* o2) {
     if (o1->type != o2->type) {
-        printf("Not implement yet %s:%d\n", __FILE__, __LINE__);
-        __builtin_unreachable();
+        TODO("different types in binary add");
     }
 
     return o1->type->num->add_func(o1, o2);
 }
 
+Object* object_binary_fdiv(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        TODO("different types in binary add");
+    }
+
+    return o1->type->num->fdiv_func(o1, o2);
+}
+
+Object* object_binary_remainder(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        TODO("different types in binary add");
+    }
+
+    return o1->type->num->remainder_func(o1, o2);
+}
+
 Object* object_binary_iadd(Object* o1, Object* o2) {
     if (o1->type != o2->type) {
-        printf("Not implement yet %s:%d\n", __FILE__, __LINE__);
-        __builtin_unreachable();
+        TODO("different types in binary add");
     }
 
     if (o1->type->num->iadd_func != NULL) {

@@ -5,6 +5,8 @@
 #include "none_object.h"
 #include "list_object.h"
 #include "code_object.h"
+#include "bool_object.h"
+#include "debugger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +20,8 @@
 #define TYPE_SMALL_TUPLE ')'
 #define TYPE_INT 'i'
 #define TYPE_NONE 'N'
+#define TYPE_TRUE 'T'
+#define TYPE_FALSE 'F'
 #define TYPE_SHORT_ASCII 'z'
 #define TYPE_SHORT_ASCII_INTERNED 'Z'
 #define TYPE_REF 'r'
@@ -68,6 +72,16 @@ static void* r_object(pyc_file* f) {
 
     case TYPE_NONE: {
         ret = none_new();
+        break;
+    }
+
+    case TYPE_TRUE: {
+        ret = true_new();
+        break;
+    }
+
+    case TYPE_FALSE: {
+        ret = false_new();
         break;
     }
 
@@ -213,8 +227,7 @@ static void* r_object(pyc_file* f) {
     }
 
     default: {
-        printf("r_object: type 0x%x ('%c') is not implemented yet\n", type, type);
-        exit(1);
+        TODO("r_object: type 0x%x ('%c') is not implemented yet\n", type, type);
     }
     }
 
