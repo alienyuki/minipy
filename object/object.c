@@ -58,17 +58,33 @@ Object* object_binary_fdiv(Object* o1, Object* o2) {
     return o1->type->num->fdiv_func(o1, o2);
 }
 
+Object* object_binary_mul(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        TODO("different types in binary mul");
+    }
+
+    return o1->type->num->mul_func(o1, o2);
+}
+
 Object* object_binary_remainder(Object* o1, Object* o2) {
     if (o1->type != o2->type) {
-        TODO("different types in binary add");
+        TODO("different types in binary remainder");
     }
 
     return o1->type->num->remainder_func(o1, o2);
 }
 
+Object* object_binary_sub(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        TODO("different types in binary sub");
+    }
+
+    return o1->type->num->sub_func(o1, o2);
+}
+
 Object* object_binary_iadd(Object* o1, Object* o2) {
     if (o1->type != o2->type) {
-        TODO("different types in binary add");
+        TODO("different types in binary iadd");
     }
 
     if (o1->type->num->iadd_func != NULL) {

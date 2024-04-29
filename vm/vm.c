@@ -17,7 +17,9 @@
 static binary_op_func binary_ops[] = {
     [BINOP_ADD] = object_binary_add,
     [BINOP_FDIV] = object_binary_fdiv,
+    [BINOP_MUL] = object_binary_mul,
     [BINOP_REMINDER] = object_binary_remainder,
+    [BINOP_SUB] = object_binary_sub,
     [BINOP_IADD] = object_binary_iadd,
 };
 

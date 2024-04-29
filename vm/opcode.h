@@ -22,7 +22,9 @@
 
 #define BINOP_ADD 0
 #define BINOP_FDIV 2
+#define BINOP_MUL 5
 #define BINOP_REMINDER 6
+#define BINOP_SUB 10
 #define BINOP_IADD 13
 
 #endif
