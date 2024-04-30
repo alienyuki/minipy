@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -g -Wall -Werror -fsanitize=address -rdynamic
+PY312 ?= ./python3.12
 
 OBJ_DIR = object
 INC_DIR = -I./test -I./vm -I./object
@@ -9,6 +10,20 @@ OBJ_OFILES = $(patsubst $(OBJ_DIR)/%.c,$(OBJ_DIR)/%.o,$(OBJ_CFILES))
 
 $(OBJ_DIR)/%.o: $(OBJ_DIR)/%.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
+
+.PHONY: default clean
+
+default: test/test_vm update_py
+	./test/test_vm $(PYTARGET)
+
+TEST_PYS  = $(wildcard test/*.py)
+TEST_PYCS = $(patsubst test/%.py,test/__pycache__/%.cpython-312.pyc,$(TEST_PYS))
+
+update_py: $(TEST_PYCS)
+	@echo "Updated"
+
+test/__pycache__/%.cpython-312.pyc: test/%.py
+	$(PY312) -m compileall $<
 
 vm/marshal.o: vm/marshal.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
@@ -44,3 +59,4 @@ clean:
 	rm -f test/test_vm
 	rm -f test/test_dict
 	rm -f vm/*.o
+	rm -rf test/__pycache__
