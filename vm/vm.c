@@ -271,7 +271,35 @@ static int pvm_run_frame(pvm* vm) {
                 TODO("method");
             }
 
-            object_print(1, callable);
+            // object_print(1, callable);
+            if (callable->type == &type_cfunc) {
+                CFuncObject* cf = (CFuncObject*) callable;
+                TupleObject* args = (TupleObject*) tuple_new(arg);
+
+                // fill tuple for builtin c function;
+                for (int i = 0; i < arg; i++) {
+                    tuple_set((Object*) args, arg - 1 - i, vm->sp[-1]);
+                    vm->sp -= 1;
+                }
+
+                // After fill func args, pop the stack(method and callable).
+                for (int i = 0; i < 2; i++) {
+                    if (vm->sp[-1] != NULL) {
+                        DECREF(vm->sp[-1]);
+                    }
+                    vm->sp -= 1;
+                }
+
+                Object* ret = cf->call(args);
+                DECREF(args);
+                // object_print(1, ret);
+
+                vm->sp += 1;
+                vm->sp[-1] = ret;
+                vm->pc += 8;
+                break;
+            }
+
             FrameObject* new_frame = (FrameObject*) frame_new((FuncObject*) callable);
             new_frame->locals = (DictObject*) dict_new();
 
@@ -333,10 +361,18 @@ int pvm_run(pvm* vm, CodeObject* code) {
     int nlocalsplus = code->localsplusnames->size;
     vm->sp = frame->localsplus + nlocalsplus;
     vm->globals = (DictObject*) dict_new();
+
+    // Load builtin C functions
+    Object* print_str = string_new_cstr("print");
+
+    dict_set(vm->globals, print_str, (Object*) &cf_print);
+
     frame->locals = vm->globals;
     INCREF(frame->locals);
 
     pvm_run_frame(vm);
+
+    DECREF(print_str);
 
     return err;
 }

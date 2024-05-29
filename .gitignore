@@ -4,3 +4,4 @@ test/test_vm
 test/test_dict
 *.o
 python3.12
+test/__pycache__

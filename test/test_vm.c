@@ -3,6 +3,7 @@
 #include "code_object.h"
 #include "vm.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <signal.h>
@@ -13,6 +14,7 @@ const char space[] = "                ";
 void handler(int signum) {
     printf("sigsegv\n");
     bt();
+    exit(0);
 }
 
 int main(int argc, char** argv) {
@@ -27,6 +29,7 @@ int main(int argc, char** argv) {
         "if",
         "add",
         "number",
+        "hello",
         NULL,
     };
 
