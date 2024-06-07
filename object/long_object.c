@@ -130,10 +130,7 @@ static Object* long_sub_func(Object* o1, Object* o2) {
     LongObject* l1 = (LongObject*) o1;
     LongObject* l2 = (LongObject*) o2;
 
-    printf("%d, %d\n", l1->n, l2->n);
-    LongObject* ret = (LongObject*) long_new(l1->n - l2->n);
-    printf("ret: %d\n", ret->n);
-    return (Object*) ret;
+    return long_new(l1->n - l2->n);
 }
 
 static Object* long_fdiv_func(Object* o1, Object* o2) {

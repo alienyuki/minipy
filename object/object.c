@@ -8,7 +8,11 @@
 void object_print(int fd, Object* o) {
     StrObject* s = (StrObject*) o->type->str(o);
 
-    write(fd, s->str, s->size);
+    if (fd == 1) {
+        printf("%.*s", s->size, (char*) s->str);
+    } else {
+        write(fd, s->str, s->size);
+    }
     DECREF(s);
 }
 

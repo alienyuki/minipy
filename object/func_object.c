@@ -68,5 +68,9 @@ static Object* cf_print_call(TupleObject* tuple) {
     for (int i = 0; i < tuple->size; i++) {
         object_print(1, tuple->items[i]);
     }
+
+    Object* nl = string_new_cstr("\n");
+    object_print(1, nl);
+    DECREF(nl);
     return string_new_cstr("cf ret\n");
 }

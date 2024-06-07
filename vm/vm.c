@@ -73,7 +73,7 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->pc = frame->pc - 2;
             vm->sp = frame->sp;
-            object_print(1, retval);
+            // object_print(1, retval);
             vm->sp += 1;
             vm->sp[-1] = retval;
             vm->pc += 2;
@@ -101,6 +101,21 @@ static int pvm_run_frame(pvm* vm) {
             Object* name = tuple_get(frame->code->names, arg);
             Object* stack_top = vm->sp[-1];
             dict_set(frame->locals, name, stack_top);
+            DECREF(stack_top);
+            vm->sp -= 1;
+            vm->pc += 2;
+
+            break;
+        }
+
+        case STORE_GLOBAL: {
+            uint8_t arg = *(vm->pc + 1);
+
+            // object_print(1, (Object*) frame->code->names);
+
+            Object* name = tuple_get(frame->code->names, arg);
+            Object* stack_top = vm->sp[-1];
+            dict_set(vm->globals, name, stack_top);
             DECREF(stack_top);
             vm->sp -= 1;
             vm->pc += 2;
@@ -140,6 +155,24 @@ static int pvm_run_frame(pvm* vm) {
             uint8_t arg = *(vm->pc + 1);
             vm->pc += arg * 2 + 2;
 
+            break;
+        }
+
+        case LOAD_GLOBAL: {
+            uint8_t arg = *(vm->pc + 1);
+
+            Object* name = tuple_get(frame->code->names, arg >> 1);
+            Object* gi = dict_get(vm->globals, name);
+
+            if (arg & 1) {
+                vm->sp += 1;
+                vm->sp[-1] = NULL;
+            }
+            vm->sp += 1;
+            vm->sp[-1] = gi;
+            INCREF(gi);
+
+            vm->pc += 10;
             break;
         }
 
@@ -202,8 +235,10 @@ static int pvm_run_frame(pvm* vm) {
         }
 
         case RETURN_CONST: {
-            printf("\n");
-            object_print(1, (Object*) frame->locals);
+            if (frame->prev_frame == NULL) {
+                printf("\n");
+                object_print(1, (Object*) frame->locals);
+            }
             Object* retval = tuple_get(frame->code->consts, *(vm->pc + 1));
 
             // set vm->frame to prev_frame
@@ -224,7 +259,7 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->pc = frame->pc - 2;
             vm->sp = frame->sp;
-            object_print(1, retval);
+            // object_print(1, retval);
             INCREF(retval);
             vm->sp += 1;
             vm->sp[-1] = retval;
@@ -307,7 +342,7 @@ static int pvm_run_frame(pvm* vm) {
             // TODO
             for (int i = 0; i < arg; i++) {
                 new_frame->localsplus[arg - 1 - i] = vm->sp[-1];
-                object_print(1, new_frame->localsplus[arg - 1 - i]);
+                // object_print(1, new_frame->localsplus[arg - 1 - i]);
                 vm->sp -= 1;
             }
 

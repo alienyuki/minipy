@@ -5,10 +5,12 @@
 #define PUSH_NULL 2
 #define RETURN_VALUE 83
 #define STORE_NAME 90
+#define STORE_GLOBAL 97
 #define LOAD_CONST 100
 #define LOAD_NAME 101
 #define COMPARE_OP 107
 #define JUMP_FORWARD 110
+#define LOAD_GLOBAL 116
 #define POP_JUMP_IF_FALSE 114
 #define RETURN_CONST 121
 #define BINARY_OP 122
