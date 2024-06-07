@@ -87,7 +87,7 @@ static void* r_object(pyc_file* f) {
 
     case TYPE_REF: {
         int n = r_long(f);
-        printf("%d\n", n);
+
         ret = list_get((Object*) f->refs, n);
 
         INCREF(ret);
@@ -95,7 +95,6 @@ static void* r_object(pyc_file* f) {
     }
 
     case TYPE_INT: {
-        printf("type int\n");
         int len = r_long(f);
         ret = long_new(len);
         object_print(1, ret);
@@ -103,20 +102,25 @@ static void* r_object(pyc_file* f) {
     }
 
     case TYPE_SMALL_TUPLE: {
-        printf("type small tuple\n");
         int len = r_byte(f);
         ret = tuple_new(len);
+
+        // For tuple, list and dict, you should add containers first in the
+        // ref list, then add the items.
+        if (ref) {
+            INCREF(ret);
+            list_append((Object*) f->refs, ret);
+        }
 
         for (int i = 0; i < len; i++) {
             Object* o = (Object*) r_object(f);
             tuple_set(ret, i, o);
         }
 
-        break;
+        return ret;
     }
 
     case TYPE_STRING: {
-        printf("type string\n");
         int len = r_long(f);
         uint8_t* s = f->start;
         f->start += len;
@@ -176,8 +180,7 @@ static void* r_object(pyc_file* f) {
         void* qualname = r_object(f);
         object_print(1, qualname);
         int firstlineno = r_long(f);
-        printf("firstlineno %d\n", firstlineno);
-        fflush(stdout);
+        printf("\nfirstlineno %d\n", firstlineno);
         void* linetable = r_object(f);
         object_print(1, linetable);
         void* exceptiontable = r_object(f);
