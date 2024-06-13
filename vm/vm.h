@@ -11,10 +11,12 @@ typedef struct {
     DictObject* globals;
     uint8_t* pc;
     Object** sp;
+
+    int instr_step;
 } pvm;
 
 int pvm_run(pvm* vm, CodeObject* code);
-pvm* vm_init();
+pvm* vm_init(int default_dbg);
 void vm_destroy(pvm* vm);
 
 #endif

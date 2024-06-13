@@ -30,10 +30,17 @@ int main(int argc, char** argv) {
         "add",
         "number",
         "hello",
+        "hanoi",
         NULL,
     };
 
     char** p = (argc == 1) ? pycs : (argv+1);
+
+    char* s = getenv("MINIPY_DBG");
+    int default_dbg = 1;
+    if (s == NULL) {
+        default_dbg = 0;
+    }
 
     while (*p) {
         char filename[128];
@@ -53,7 +60,7 @@ int main(int argc, char** argv) {
 
         printf("\n\n-------- vm start --------\n\n");
 
-        pvm* vm = vm_init();
+        pvm* vm = vm_init(default_dbg);
         pvm_run(vm, (CodeObject*) code_obj);
         DECREF(code_obj);
         vm_destroy(vm);
