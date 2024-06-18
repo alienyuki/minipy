@@ -8,6 +8,7 @@
 #define STORE_GLOBAL 97
 #define LOAD_CONST 100
 #define LOAD_NAME 101
+#define LOAD_ATTR 106
 #define COMPARE_OP 107
 #define JUMP_FORWARD 110
 #define LOAD_GLOBAL 116

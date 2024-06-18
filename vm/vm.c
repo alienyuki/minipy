@@ -229,6 +229,26 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case LOAD_ATTR: {
+            Object* owner = vm->sp[-1];
+            vm->sp -= 1;
+
+            uint8_t arg = *(vm->pc + 1);
+            Object* name = tuple_get(frame->code->names, arg >> 1);
+            Object* attr = object_get_attr(owner, name);
+            // load as function
+            if (arg & 1) {
+                vm->sp += 1;
+                vm->sp[-1] = attr;
+                vm->sp += 1;
+                vm->sp[-1] = owner;
+            } else {
+                TODO("LOAD_ATTR load normal member");
+            }
+            vm->pc += 20;
+            break;
+        }
+
         case COMPARE_OP: {
             uint8_t arg = *(vm->pc + 1);
             Object* v2 = vm->sp[-1];
@@ -398,7 +418,8 @@ static int pvm_run_frame(pvm* vm) {
             Object* callable = vm->sp[-(1 + arg)];
             Object* method = vm->sp[-(2 + arg)];
             if (method != NULL) {
-                TODO("method");
+                callable = method;
+                arg++;
             }
 
             // object_print(1, callable);

@@ -29,6 +29,19 @@ Object* object_compare(Object* o1, Object* o2, cmp_op op) {
     TODO("different types compare");
 }
 
+Object* object_get_attr(Object* owner, Object* name) {
+    TypeObject* tp = owner->type;
+    Object* ret;
+    if (tp->get_attr) {
+        ret = tp->get_attr(owner, name);
+        if (ret) {
+            return ret;
+        }
+    }
+
+    TODO("load attr when attr not in type");
+}
+
 void inc_ref(Object* o) {
     if (o->refcnt != IMMORTAL_REF) {
         o->refcnt += 1;
