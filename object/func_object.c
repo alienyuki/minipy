@@ -1,8 +1,11 @@
 #include "func_object.h"
+#include "dict_object.h"
 #include "str_object.h"
+#include "debugger.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 static Object* func_str(Object* obj);
 static void func_destr(Object* obj);
@@ -56,7 +59,7 @@ static void cfunc_destr(Object* obj) {
 
 static Object* cf_print_call(TupleObject* tuple);
 
-CFuncObject cf_print = {
+static CFuncObject cf_print = {
     .base = {
         .refcnt = IMMORTAL_REF,
         .type = &type_cfunc,
@@ -73,4 +76,37 @@ static Object* cf_print_call(TupleObject* tuple) {
     object_print(1, nl);
     DECREF(nl);
     return string_new_cstr("cf ret\n");
+}
+
+
+// builtin functions
+static struct {
+    char* name;
+    CFuncObject* func;
+    Object* str;
+} btfs[] = {
+    {"print", &cf_print, NULL},
+    {NULL, NULL, NULL}
+};
+
+
+Object* init_builtin_func() {
+    DictObject* ret = (DictObject*) dict_new();
+    for (int i = 0; btfs[i].name != NULL; i++) {
+        if (btfs[i].str == NULL) {
+            int size = strlen(btfs[i].name);
+            btfs[i].str = string_new((uint8_t*) btfs[i].name, size);
+
+        }
+        dict_set(ret, btfs[i].str, (Object*) btfs[i].func);
+    }
+
+    return (Object*) ret;
+}
+
+void destroy_builtin_func() {
+    for (int i = 0; btfs[i].name != NULL; i++) {
+        DECREF(btfs[i].str);
+        btfs[i].str = NULL;
+    }
 }

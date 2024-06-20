@@ -417,9 +417,12 @@ static int pvm_run_frame(pvm* vm) {
             uint8_t arg = *(vm->pc + 1);
             Object* callable = vm->sp[-(1 + arg)];
             Object* method = vm->sp[-(2 + arg)];
+            // pop method and callable
+            int pop_mc = 2;
             if (method != NULL) {
                 callable = method;
                 arg++;
+                pop_mc = 1;
             }
 
             // object_print(1, callable);
@@ -434,7 +437,7 @@ static int pvm_run_frame(pvm* vm) {
                 }
 
                 // After fill func args, pop the stack(method and callable).
-                for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < pop_mc; i++) {
                     if (vm->sp[-1] != NULL) {
                         DECREF(vm->sp[-1]);
                     }
@@ -463,7 +466,7 @@ static int pvm_run_frame(pvm* vm) {
             }
 
             // After fill func args, pop the stack(method and callable).
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < pop_mc; i++) {
                 if (vm->sp[-1] != NULL) {
                     DECREF(vm->sp[-1]);
                 }
@@ -511,19 +514,14 @@ int pvm_run(pvm* vm, CodeObject* code) {
     vm->pc = frame->code->bytecodes;
     int nlocalsplus = code->localsplusnames->size;
     vm->sp = frame->localsplus + nlocalsplus;
-    vm->globals = (DictObject*) dict_new();
 
     // Load builtin C functions
-    Object* print_str = string_new_cstr("print");
-
-    dict_set(vm->globals, print_str, (Object*) &cf_print);
+    vm->globals = (DictObject*) init_builtin_func();
 
     frame->locals = vm->globals;
     INCREF(frame->locals);
 
     pvm_run_frame(vm);
-
-    DECREF(print_str);
 
     return err;
 }
@@ -544,5 +542,6 @@ void vm_destroy(pvm* vm) {
     if (vm->globals != NULL) {
         DECREF(vm->globals);
     }
+    destroy_builtin_func();
     free(vm);
 }

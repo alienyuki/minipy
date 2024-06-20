@@ -17,7 +17,8 @@ typedef struct {
     Object* (*call)(TupleObject*);
 } CFuncObject;
 
-extern CFuncObject cf_print;
+Object* init_builtin_func();
+void destroy_builtin_func();
 
 Object* func_new(CodeObject* code);
 
