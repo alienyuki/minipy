@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdlib.h>
 
 #include <signal.h>
 #include "debugger.h"
@@ -12,27 +15,66 @@
 const char space[] = "                ";
 
 void handler(int signum) {
-    printf("sigsegv\n");
+    if (signum == SIGINT) {
+        printf("sigint\n");
+    } else {
+        printf("sigsegv\n");
+    }
     bt();
     exit(0);
 }
 
+int endpy(char* filename) {
+    int n = strlen(filename);
+    if (n < 3) {
+        return 0;
+    }
+
+    if (strcmp(".py", filename + n - 3) == 0) {
+        return n - 3;
+    }
+    return 0;
+}
+
+
+int ls(char* path, char** pycs, char* stack) {
+    DIR* dir = opendir(path);
+    int pi = 0;
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        int len = endpy(entry->d_name);
+        if (len) {
+            pycs[pi] = stack;
+            memcpy(pycs[pi], entry->d_name, len);
+            pi++;
+            stack += len;
+            *stack = 0;
+            stack++;
+        }
+    }
+
+    if (closedir(dir) != 0) {
+        perror("closedir");
+        return EXIT_FAILURE;
+    }
+
+    return 1;
+}
+
+
 int main(int argc, char** argv) {
     signal(SIGSEGV, handler);
     signal(SIGINT, handler);
-    char* pycs[] = {
-        "arithmetic",
-        "perfect_number",
-        "func_2",
-        "func",
-        "while",
-        "if",
-        "add",
-        "number",
-        "hello",
-        "hanoi",
-        NULL,
-    };
+
+    char* pycs[64];
+    char  stack[4096];
+
+    memset(pycs, 0, sizeof(pycs));
+    ls("test", pycs, stack);
+    for (int i = 0; pycs[i] != NULL; i++) {
+        printf("%s\n", pycs[i]);
+    }
 
     char** p = (argc == 1) ? pycs : (argv+1);
 
