@@ -78,6 +78,37 @@ static Object* cf_print_call(TupleObject* tuple) {
     return string_new_cstr("cf ret\n");
 }
 
+static Object* cf_input_call(TupleObject* tuple);
+
+static CFuncObject cf_input = {
+    .base = {
+        .refcnt = IMMORTAL_REF,
+        .type = &type_cfunc,
+    },
+    .call = cf_input_call,
+};
+
+static Object* cf_input_call(TupleObject* tuple) {
+    if (tuple_size(tuple) == 1) {
+        object_print(1, tuple_get(tuple, 0));
+    }
+
+    char input[128];
+    int size;
+
+    if (fgets(input, sizeof(input), stdin)) {
+        int len = strlen(input);
+        if (input[len - 1] == '\n') {
+            input[len - 1] = '\0';
+        }
+        size = len - 1;
+    } else {
+        UNREACHABLE();
+    }
+
+    return string_new((uint8_t*) input, size);;
+}
+
 
 // builtin functions
 static struct {
@@ -86,6 +117,7 @@ static struct {
     Object* str;
 } btfs[] = {
     {"print", &cf_print, NULL},
+    {"input", &cf_input, NULL},
     {NULL, NULL, NULL}
 };
 
