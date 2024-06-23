@@ -1,5 +1,10 @@
 #include "list_object.h"
 #include "str_object.h"
+#include "func_object.h"
+#include "dict_object.h"
+#include "none_object.h"
+#include "debugger.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -8,11 +13,14 @@
 static Object* list_str(Object* obj);
 static void list_destr(Object* obj);
 static void list_expand_size(ListObject* o);
+static Object* list_get_attr(Object* owner, Object* attr);
 
 TypeObject type_list = {
     .name = "list",
     .str  = list_str,
     .destr = list_destr,
+    .get_attr = list_get_attr,
+    .dict = NULL,
 };
 
 Object* list_new(int n) {
@@ -100,4 +108,53 @@ void list_append(Object* list, Object* o) {
     }
     l->items[l->len] = o;
     l->len += 1;
+}
+
+static Object* list_get_attr(Object* owner, Object* attr) {
+    Object* ret = dict_get((DictObject*) owner->type->dict, attr);
+    if (ret) {
+        return ret;
+    }
+
+    return NULL;
+}
+
+static Object* list_append_call(TupleObject* tuple);
+static CFuncObject list_append_cf = {
+    .base = {
+        .refcnt = IMMORTAL_REF,
+        .type = &type_cfunc,
+    },
+    .call = list_append_call,
+};
+
+static Object* list_append_call(TupleObject* tuple) {
+    if (tuple_size(tuple) != 2) {
+        panic("index error");
+        return NULL;
+    }
+
+    Object* list = tuple_get(tuple, 0);
+    Object* item = tuple_get(tuple, 1);
+    INCREF(item);
+    list_append(list, item);
+
+    return (Object*) none_new();
+}
+
+
+static Object* s[256] = {};
+static int s_len;
+
+__attribute__((constructor)) static void con() {
+    type_list.dict = dict_new();
+    s[s_len++] = string_new_cstr("append");
+    dict_set((DictObject*) type_list.dict, s[s_len-1], (Object*) &list_append_cf);
+}
+
+__attribute__((destructor)) static void des() {
+    DECREF(type_list.dict);
+    for (int i = 0; i < s_len; i++) {
+        DECREF(s[i]);
+    }
 }

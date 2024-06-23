@@ -111,7 +111,7 @@ static Object* str_upper_call(TupleObject* tuple) {
 
 
 static Object* s[256] = {};
-int s_len;
+static int s_len;
 
 __attribute__((constructor)) static void con() {
     type_string.dict = dict_new();

@@ -229,6 +229,20 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case BUILD_LIST: {
+            uint8_t arg = *(vm->pc + 1);
+            Object* list = list_new(arg);
+            for (int i = 0; i < arg; i++) {
+                list_append(list, vm->sp[-1]);
+                vm->sp -= 1;
+            }
+
+            vm->sp += 1;
+            vm->sp[-1] = list;
+            vm->pc += 2;
+            break;
+        }
+
         case LOAD_ATTR: {
             Object* owner = vm->sp[-1];
             vm->sp -= 1;
