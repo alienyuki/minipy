@@ -3,6 +3,7 @@
 #include "func_object.h"
 #include "dict_object.h"
 #include "none_object.h"
+#include "long_object.h"
 #include "debugger.h"
 
 #include <stdlib.h>
@@ -112,6 +113,23 @@ void list_append(Object* list, Object* o) {
     l->len += 1;
 }
 
+Object* list_pop(Object* list, int index) {
+    ListObject* l = (ListObject*) list;
+    if (l->len == 0) {
+        panic("pop from empty list");
+    }
+    if (index >= l->len || index < 0) {
+        panic("Index out of range");
+    }
+
+    Object* ret = l->items[index];
+    for (int i = index; i < l->len - 1; i++) {
+        l->items[i] = l->items[i+1];
+    }
+    l->len -= 1;
+    return ret;
+}
+
 static Object* list_get_attr(Object* owner, Object* attr) {
     Object* ret = dict_get((DictObject*) owner->type->dict, attr);
     if (ret) {
@@ -121,15 +139,17 @@ static Object* list_get_attr(Object* owner, Object* attr) {
     return NULL;
 }
 
-static Object* list_append_call(TupleObject* tuple);
-static CFuncObject list_append_cf = {
-    .base = {
-        .refcnt = IMMORTAL_REF,
-        .type = &type_cfunc,
-    },
-    .call = list_append_call,
-};
+#define LIST_CF(method) \
+static Object* list_##method##_call(TupleObject* tuple);    \
+static CFuncObject list_##method##_cf = {                   \
+    .base = {                                               \
+        .refcnt = IMMORTAL_REF,                             \
+        .type = &type_cfunc,                                \
+    },                                                      \
+    .call = list_##method##_call,                           \
+}
 
+LIST_CF(append);
 static Object* list_append_call(TupleObject* tuple) {
     if (tuple_size(tuple) != 2) {
         panic("index error");
@@ -143,14 +163,41 @@ static Object* list_append_call(TupleObject* tuple) {
     return (Object*) none_new();
 }
 
+LIST_CF(pop);
+static Object* list_pop_call(TupleObject* tuple) {
+    int sz = tuple_size(tuple);
+    if (sz > 2) {
+        panic("argument count error");
+        return NULL;
+    }
+
+    Object* list = tuple_get(tuple, 0);
+    int index;
+    if (sz == 1) {
+        ListObject* l = (ListObject*) list;
+        index = l->len - 1;
+    } else {
+        LongObject* o_idx = (LongObject*) tuple_get(tuple, 1);
+        index = o_idx->n;
+    }
+
+    Object* ret = list_pop(list, index);
+    return ret;
+}
 
 static Object* s[256] = {};
 static int s_len;
 
+#define INSERT_CF(method) \
+    s[s_len] = string_new_cstr(#method);            \
+    dict_set((DictObject*) type_list.dict,          \
+        s[s_len++], (Object*) &list_##method##_cf)  \
+
+
 __attribute__((constructor)) static void con() {
     type_list.dict = dict_new();
-    s[s_len++] = string_new_cstr("append");
-    dict_set((DictObject*) type_list.dict, s[s_len-1], (Object*) &list_append_cf);
+    INSERT_CF(append);
+    INSERT_CF(pop);
 }
 
 __attribute__((destructor)) static void des() {

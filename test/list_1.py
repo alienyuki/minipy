@@ -3,3 +3,16 @@ b = [1]
 c = [b]
 b.append(1)
 c.append(a)
+d = c.pop()
+c.pop()
+
+i = 0
+l = []
+while i < 10:
+    l.append(i)
+    i += 1
+    print(l)
+
+print(l.pop(1))
+print(l.pop(3))
+print(l.pop(5))
