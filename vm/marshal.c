@@ -97,7 +97,6 @@ static void* r_object(pyc_file* f) {
     case TYPE_INT: {
         int len = r_long(f);
         ret = long_new(len);
-        object_print(1, ret);
         break;
     }
 
@@ -128,33 +127,14 @@ static void* r_object(pyc_file* f) {
     }
 
     case TYPE_CODE: {
-        printf("type code\n");
         int argcount        = r_long(f);
         int posonlyargcount = r_long(f);
         int kwonlyargcount  = r_long(f);
         int stacksize       = r_long(f);
         int flags           = r_long(f);
 
-        printf("argcount:        %d\n", argcount);
-        printf("posonlyargcount: %d\n", posonlyargcount);
-        printf("kwonlyargcount:  %d\n", kwonlyargcount);
-        printf("stacksize:       %d\n", stacksize);
-        printf("flags:           %d\n", flags);
-
-        // Layout of code object
-        // fill these one by one
-        // void* code          = r_object(f);
-        // void* consts        = r_object(f);
-        // void* names         = r_object(f);
-        // void* localsplusnames = r_object(f);
-        // void* localspluskinds = r_object(f);
-        // void* filename      = r_object(f);
-        // void* name          = r_object(f);
-        // void* qualname      = r_object(f);
-        // int firstlineno     = r_long(f);
-        // void* linetable     = r_object(f);
-        // void* exceptiontable = r_object(f);
-
+        // Figure out why list_append a none
+        __attribute__((unused))
         int reserve_idx;
         if (ref) {
             // reserve a place for the final generate code object
@@ -163,29 +143,16 @@ static void* r_object(pyc_file* f) {
         }
 
         void* code = r_object(f);
-        object_print(1, code);
         void* consts = r_object(f);
-        object_print(1, consts);
         void* names = r_object(f);
-        object_print(1, names);
         void* localsplusnames = r_object(f);
-        object_print(1, localsplusnames);
         void* localspluskinds = r_object(f);
-        object_print(1, localspluskinds);
         void* filename = r_object(f);
-        object_print(1, filename);
         void* name = r_object(f);
-        object_print(1, name);
         void* qualname = r_object(f);
-        object_print(1, qualname);
         int firstlineno = r_long(f);
-        printf("\nfirstlineno %d\n", firstlineno);
         void* linetable = r_object(f);
-        object_print(1, linetable);
         void* exceptiontable = r_object(f);
-        object_print(1, exceptiontable);
-
-
 
         CodeCons code_con = {
             .filename = filename,
@@ -208,9 +175,6 @@ static void* r_object(pyc_file* f) {
 
         CodeObject* code_obj = init_code(&code_con);
         // insert code_obj to ref
-
-        printf("%d\n", reserve_idx);
-        object_print(1, (Object*) f->refs);
 
         ret = (Object*) code_obj;
 
@@ -263,10 +227,11 @@ void* unmarshal_pyc(const char* filename) {
     f.start = f.buffer;
     f.end = f.start + n;
 
-    printf("%x\n", r_long(&f));
-    printf("%x\n", r_long(&f));
-    printf("%x\n", r_long(&f));
-    printf("%x\n", r_long(&f));
+    r_long(&f);
+    r_long(&f);
+    r_long(&f);
+    r_long(&f);
+
     Object* code = r_object(&f);
     DECREF(f.refs);
     return code;

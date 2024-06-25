@@ -72,9 +72,6 @@ int main(int argc, char** argv) {
 
     memset(pycs, 0, sizeof(pycs));
     ls("test", pycs, stack);
-    for (int i = 0; pycs[i] != NULL; i++) {
-        printf("%s\n", pycs[i]);
-    }
 
     char** p = (argc == 1) ? pycs : (argv+1);
 
