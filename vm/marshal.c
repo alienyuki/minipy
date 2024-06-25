@@ -108,7 +108,6 @@ static void* r_object(pyc_file* f) {
         // For tuple, list and dict, you should add containers first in the
         // ref list, then add the items.
         if (ref) {
-            INCREF(ret);
             list_append((Object*) f->refs, ret);
         }
 
@@ -235,7 +234,6 @@ static void* r_object(pyc_file* f) {
     }
 
     if (ref) {
-        INCREF(ret);
         list_append((Object*) f->refs, ret);
     }
     return ret;

@@ -80,6 +80,7 @@ int list_set(Object* list, int index, Object* o) {
     ListObject* l = (ListObject*) list;
     assert(index < l->len);
     DECREF(l->items[index]);
+    INCREF(o);
     l->items[index] = o;
     return 0;
 }
@@ -106,6 +107,7 @@ void list_append(Object* list, Object* o) {
     if (l->len == l->capacity) {
         list_expand_size(l);
     }
+    INCREF(o);
     l->items[l->len] = o;
     l->len += 1;
 }
@@ -136,7 +138,6 @@ static Object* list_append_call(TupleObject* tuple) {
 
     Object* list = tuple_get(tuple, 0);
     Object* item = tuple_get(tuple, 1);
-    INCREF(item);
     list_append(list, item);
 
     return (Object*) none_new();

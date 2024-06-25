@@ -233,7 +233,9 @@ static int pvm_run_frame(pvm* vm) {
             uint8_t arg = *(vm->pc + 1);
             Object* list = list_new(arg);
             for (int i = 0; i < arg; i++) {
-                list_append(list, vm->sp[-1]);
+                Object* o = vm->sp[-1];
+                list_append(list, o);
+                DECREF(o);
                 vm->sp -= 1;
             }
 
