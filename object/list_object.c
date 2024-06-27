@@ -16,12 +16,21 @@ static void list_destr(Object* obj);
 static void list_expand_size(ListObject* o);
 static Object* list_get_attr(Object* owner, Object* attr);
 
+static Object* list_get_sub(Object* container, int index);
+static int list_set_sub(Object* container, int sub, Object* v);
+
+seq_methods list_seq_methods = {
+    .get_sub = list_get_sub,
+    .set_sub = list_set_sub,
+};
+
 TypeObject type_list = {
     .name = "list",
     .str  = list_str,
     .destr = list_destr,
     .get_attr = list_get_attr,
     .dict = NULL,
+    .seq = &list_seq_methods,
 };
 
 Object* list_new(int n) {
@@ -137,6 +146,14 @@ static Object* list_get_attr(Object* owner, Object* attr) {
     }
 
     return NULL;
+}
+
+static Object* list_get_sub(Object* container, int index) {
+    return list_get(container, index);
+}
+
+static int list_set_sub(Object* container, int index, Object* v) {
+    return list_set(container, index, v);
 }
 
 #define LIST_CF(method) \

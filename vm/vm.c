@@ -147,6 +147,40 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case BINARY_SUBSCR: {
+            Object* sub = vm->sp[-1];
+            vm->sp -= 1;
+            Object* container = vm->sp[-1];
+            vm->sp -= 1;
+
+            Object* item = object_get_item(container, sub);
+            DECREF(container);
+            DECREF(sub);
+            vm->sp += 1;
+            vm->sp[-1] = item;
+            INCREF(item);
+            vm->pc += 4;
+            break;
+        }
+
+        case STORE_SUBSCR: {
+            Object* sub = vm->sp[-1];
+            vm->sp -= 1;
+            Object* container = vm->sp[-1];
+            vm->sp -= 1;
+            Object* item = vm->sp[-1];
+            vm->sp -= 1;
+
+            object_set_item(container, sub, item);
+            DECREF(item);
+            DECREF(container);
+            DECREF(sub);
+
+            vm->pc += 4;
+
+            break;
+        }
+
         case RETURN_VALUE: {
             Object* retval = vm->sp[-1];
             vm->sp -= 1;

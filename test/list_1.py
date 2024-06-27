@@ -16,3 +16,7 @@ while i < 10:
 print(l.pop(1))
 print(l.pop(3))
 print(l.pop(5))
+
+print(l[1])
+l[1] = "yuki"
+print(l[1])

@@ -3,6 +3,8 @@
 
 #define POP_TOP 1
 #define PUSH_NULL 2
+#define BINARY_SUBSCR 25
+#define STORE_SUBSCR 60
 #define RETURN_VALUE 83
 #define STORE_NAME 90
 #define STORE_GLOBAL 97

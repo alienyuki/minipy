@@ -1,5 +1,6 @@
 #include "object.h"
 #include "str_object.h"
+#include "long_object.h"
 #include "debugger.h"
 
 #include <unistd.h>
@@ -40,6 +41,33 @@ Object* object_get_attr(Object* owner, Object* name) {
     }
 
     TODO("load attr when attr not in type");
+}
+
+int object_set_item(Object* container, Object* sub, Object* v) {
+    if (container->type->map != NULL) {
+        TODO("map in set_item");
+    } 
+
+    if (container->type->seq != NULL) {
+        int index = ((LongObject*) sub)->n;
+        return container->type->seq->set_sub(container, index, v);
+    }
+
+    UNREACHABLE();
+}
+
+
+Object* object_get_item(Object* container, Object* sub) {
+    if (container->type->map != NULL) {
+        TODO("map in get_item");
+    } 
+
+    if (container->type->seq != NULL) {
+        int index = ((LongObject*) sub)->n;
+        return container->type->seq->get_sub(container, index);
+    }
+
+    UNREACHABLE();
 }
 
 void inc_ref(Object* o) {

@@ -24,6 +24,7 @@ typedef void (*destr_func)(Object*);
 typedef hash_t (*hash_func)(Object*);
 typedef Object* (*compare_func)(Object*, Object*, cmp_op);
 typedef Object* (*getattr_func)(Object*, Object*);
+
 typedef struct {
     binary_op_func add_func;
     binary_op_func fdiv_func;
@@ -32,6 +33,16 @@ typedef struct {
     binary_op_func sub_func;
     binary_op_func iadd_func;
 } number_methods;
+
+typedef struct {
+    Object* (*get_sub)(Object*, int);
+    int     (*set_sub)(Object*, int, Object*);
+} seq_methods;
+
+typedef struct {
+
+} map_methods;
+
 
 struct Object {
     int refcnt;
@@ -48,6 +59,8 @@ struct TypeObject {
     getattr_func get_attr;
     
     number_methods* num;
+    seq_methods* seq;
+    map_methods* map;
 
     Object* dict;
 };
@@ -58,6 +71,9 @@ hash_t object_hash(Object* o);
 Object* object_compare(Object* o1, Object* o2, cmp_op op);
 
 Object* object_get_attr(Object* owner, Object* name);
+
+Object* object_get_item(Object* container, Object* sub);
+int object_set_item(Object* container, Object* sub, Object* v);
 
 #define IMMORTAL_REF (1 << 30)
 
