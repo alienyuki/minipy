@@ -45,9 +45,19 @@ Object* list_new(int n) {
     return (Object*) ret;
 }
 
+static Object* str_list[64];
+static int str_list_idx;
+
 static Object* list_str(Object* obj) {
     assert(obj->type == &type_list);
     ListObject* l = (ListObject*) obj;
+    for (int i = 0; i < str_list_idx; i++) {
+        if (str_list[i] == obj) {
+            return string_new_cstr("[...]");
+        }
+    }
+    str_list[str_list_idx++] = obj;
+
     uint8_t tmp[2048];
     int tmp_index = 0;
     tmp[0] = '[';
@@ -70,6 +80,7 @@ static Object* list_str(Object* obj) {
     tmp[tmp_index] = ']';
     tmp_index += 1;
 
+    str_list_idx -= 1;
     return string_new(tmp, tmp_index);
 }
 

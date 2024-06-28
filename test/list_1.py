@@ -20,3 +20,12 @@ print(l.pop(5))
 print(l[1])
 l[1] = "yuki"
 print(l[1])
+
+a.append(a)
+
+r1 = [1]
+r2 = [2]
+r1.append(r2)
+r2.append(r1)
+print("r1: ", r1)
+print("r2: ", r2)
