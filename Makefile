@@ -34,6 +34,9 @@ vm/vm.o: vm/vm.c
 vm/debugger.o: vm/debugger.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
 
+vm/gc.o: vm/gc.c
+	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
+
 test/test_marshal.o: test/test_marshal.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
 
@@ -43,10 +46,10 @@ test/test_vm.o: test/test_vm.c
 test/test_dict.o: test/test_dict.c
 	$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
 
-test/test_marshal: test/test_marshal.o vm/marshal.o vm/debugger.o $(OBJ_OFILES)
+test/test_marshal: test/test_marshal.o vm/marshal.o vm/debugger.o vm/gc.o $(OBJ_OFILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
-test/test_vm: test/test_vm.o vm/marshal.o vm/vm.o vm/debugger.o $(OBJ_OFILES)
+test/test_vm: test/test_vm.o vm/marshal.o vm/vm.o vm/debugger.o vm/gc.o $(OBJ_OFILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
 test/test_dict: test/test_dict.o vm/debugger.o $(OBJ_OFILES)

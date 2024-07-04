@@ -2,6 +2,8 @@
 #include "object.h"
 #include "code_object.h"
 #include "vm.h"
+#include "gc.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,5 +108,6 @@ int main(int argc, char** argv) {
         printf("\n\n--------  vm end  --------\n\n");
         p++;
     }
+    gc();
     return 0;
 }

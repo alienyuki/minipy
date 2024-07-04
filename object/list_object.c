@@ -6,6 +6,8 @@
 #include "long_object.h"
 #include "debugger.h"
 
+#include "gc.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -34,7 +36,7 @@ TypeObject type_list = {
 };
 
 Object* list_new(int n) {
-    ListObject* ret = malloc(sizeof(ListObject));
+    ListObject* ret = gc_malloc(sizeof(ListObject));
     n = n > 4 ? n : 4;
     ret->base.refcnt = 1;
     ret->base.type = &type_list;
@@ -93,7 +95,7 @@ static void list_destr(Object* obj) {
     }
 
     free(l->items);
-    free(l);
+    gc_free(l);
 }
 
 int list_set(Object* list, int index, Object* o) {
@@ -222,15 +224,16 @@ static int s_len;
         s[s_len++], (Object*) &list_##method##_cf)  \
 
 
-__attribute__((constructor)) static void con() {
+void list_type_init() {
     type_list.dict = dict_new();
     INSERT_CF(append);
     INSERT_CF(pop);
 }
 
-__attribute__((destructor)) static void des() {
+void list_type_destroy() {
     DECREF(type_list.dict);
     for (int i = 0; i < s_len; i++) {
         DECREF(s[i]);
     }
+    s_len = 0;
 }

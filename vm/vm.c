@@ -6,6 +6,7 @@
 #include "func_object.h"
 #include "str_object.h"
 #include "opcode.h"
+#include "gc.h"
 #include "debugger.h"
 
 
@@ -577,7 +578,9 @@ int pvm_run(pvm* vm, CodeObject* code) {
 }
 
 pvm* vm_init(int default_dbg) {
-    pvm_run_frame(NULL);
+    string_type_init();
+    list_type_init();
+
     pvm* vm = malloc(sizeof(pvm));
     memset(vm, 0, sizeof(pvm));
     if (default_dbg) {
@@ -594,4 +597,7 @@ void vm_destroy(pvm* vm) {
     }
     destroy_builtin_func();
     free(vm);
+
+    list_type_destroy();
+    string_type_destroy();
 }

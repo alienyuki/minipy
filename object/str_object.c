@@ -113,15 +113,16 @@ static Object* str_upper_call(TupleObject* tuple) {
 static Object* s[256] = {};
 static int s_len;
 
-__attribute__((constructor)) static void con() {
+void string_type_init() {
     type_string.dict = dict_new();
     s[s_len++] = string_new_cstr("upper");
     dict_set((DictObject*) type_string.dict, s[s_len-1], (Object*) &str_upper);
 }
 
-__attribute__((destructor)) static void des() {
+void string_type_destroy() {
     DECREF(type_string.dict);
     for (int i = 0; i < s_len; i++) {
         DECREF(s[i]);
     }
+    s_len = 0;
 }
