@@ -17,6 +17,7 @@ static Object* list_str(Object* obj);
 static void list_destr(Object* obj);
 static void list_expand_size(ListObject* o);
 static Object* list_get_attr(Object* owner, Object* attr);
+static int list_traverse(Object* o, tr_visit visit, void* args);
 
 static Object* list_get_sub(Object* container, int index);
 static int list_set_sub(Object* container, int sub, Object* v);
@@ -33,6 +34,7 @@ TypeObject type_list = {
     .get_attr = list_get_attr,
     .dict = NULL,
     .seq = &list_seq_methods,
+    .traverse = list_traverse,
 };
 
 Object* list_new(int n) {
@@ -64,7 +66,7 @@ static Object* list_str(Object* obj) {
     int tmp_index = 0;
     tmp[0] = '[';
     tmp_index += 1;
-    for (int i = 0; i < l->len; i++) {
+    for (int i = 0; i < list_size(l); i++) {
         Object* item = l->items[i];
         StrObject* s = (StrObject*) item->type->str(item);
         memcpy(tmp + tmp_index, s->str, s->size);
@@ -90,7 +92,7 @@ static void list_destr(Object* obj) {
     assert(obj->type == &type_list);
     ListObject* l = (ListObject*) obj;
 
-    for (int i = 0; i < l->len; i++) {
+    for (int i = 0; i < list_size(l); i++) {
         DECREF(l->items[i]);
     }
 
@@ -101,7 +103,7 @@ static void list_destr(Object* obj) {
 int list_set(Object* list, int index, Object* o) {
     assert(list->type == &type_list);
     ListObject* l = (ListObject*) list;
-    assert(index < l->len);
+    assert(index < list_size(l));
     DECREF(l->items[index]);
     INCREF(o);
     l->items[index] = o;
@@ -111,14 +113,14 @@ int list_set(Object* list, int index, Object* o) {
 Object* list_get(Object* list, int index) {
     assert(list->type == &type_list);
     ListObject* l = (ListObject*) list;
-    assert(index < l->len);
+    assert(index < list_size(l));
     return l->items[index];
 }
 
 static void list_expand_size(ListObject* l) {
-    Object** new_items = malloc(l->len * sizeof(Object*) * 2);
-    memcpy(new_items, l->items, l->len * sizeof(Object*));
-    memset(new_items + l->len, 0, l->len * sizeof(Object*));
+    Object** new_items = malloc(list_size(l) * sizeof(Object*) * 2);
+    memcpy(new_items, l->items, list_size(l) * sizeof(Object*));
+    memset(new_items + list_size(l), 0, list_size(l) * sizeof(Object*));
     free(l->items);
     l->items = new_items;
     l->capacity *= 2;
@@ -127,25 +129,25 @@ static void list_expand_size(ListObject* l) {
 void list_append(Object* list, Object* o) {
     assert(list->type == &type_list);
     ListObject* l = (ListObject*) list;
-    if (l->len == l->capacity) {
+    if (list_size(l) == l->capacity) {
         list_expand_size(l);
     }
     INCREF(o);
-    l->items[l->len] = o;
+    l->items[list_size(l)] = o;
     l->len += 1;
 }
 
 Object* list_pop(Object* list, int index) {
     ListObject* l = (ListObject*) list;
-    if (l->len == 0) {
+    if (list_size(l) == 0) {
         panic("pop from empty list");
     }
-    if (index >= l->len || index < 0) {
+    if (index >= list_size(l) || index < 0) {
         panic("Index out of range");
     }
 
     Object* ret = l->items[index];
-    for (int i = index; i < l->len - 1; i++) {
+    for (int i = index; i < list_size(l) - 1; i++) {
         l->items[i] = l->items[i+1];
     }
     l->len -= 1;
@@ -159,6 +161,23 @@ static Object* list_get_attr(Object* owner, Object* attr) {
     }
 
     return NULL;
+}
+
+static int list_traverse(Object* o, tr_visit visit, void* args) {
+    ListObject* l = (ListObject*) o;
+    for (int i = 0; i < list_size(l); i++) {
+        Object* item = l->items[i];
+        if (item->type->traverse != NULL) {
+            if (visit(item, args)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int list_size(ListObject* list) {
+    return list->len;
 }
 
 static Object* list_get_sub(Object* container, int index) {
@@ -205,7 +224,7 @@ static Object* list_pop_call(TupleObject* tuple) {
     int index;
     if (sz == 1) {
         ListObject* l = (ListObject*) list;
-        index = l->len - 1;
+        index = list_size(l) - 1;
     } else {
         LongObject* o_idx = (LongObject*) tuple_get(tuple, 1);
         index = o_idx->n;

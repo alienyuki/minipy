@@ -24,6 +24,8 @@ typedef void (*destr_func)(Object*);
 typedef hash_t (*hash_func)(Object*);
 typedef Object* (*compare_func)(Object*, Object*, cmp_op);
 typedef Object* (*getattr_func)(Object*, Object*);
+typedef int (*tr_visit)(Object*, void*);
+typedef int (*traverse_func)(Object*, tr_visit, void*);
 
 typedef struct {
     binary_op_func add_func;
@@ -57,7 +59,8 @@ struct TypeObject {
     hash_func hash;
     compare_func cmp;
     getattr_func get_attr;
-    
+    traverse_func traverse;
+
     number_methods* num;
     seq_methods* seq;
     map_methods* map;

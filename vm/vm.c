@@ -552,6 +552,7 @@ static int pvm_run_frame(pvm* vm) {
     }
 
 done:
+    gc();
     return err;
 }
 

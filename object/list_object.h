@@ -22,5 +22,6 @@ Object* list_get(Object* list, int index);
 void list_append(Object* list, Object* o);
 Object* list_pop(Object* list, int index);
 // void list_insert(Object* list, int index, Object* o);
+int list_size(ListObject* list);
 
 #endif
