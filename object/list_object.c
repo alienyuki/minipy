@@ -15,6 +15,7 @@
 
 static Object* list_str(Object* obj);
 static void list_destr(Object* obj);
+static void list_clear(Object* obj);
 static void list_expand_size(ListObject* o);
 static Object* list_get_attr(Object* owner, Object* attr);
 static int list_traverse(Object* o, tr_visit visit, void* args);
@@ -35,6 +36,8 @@ TypeObject type_list = {
     .dict = NULL,
     .seq = &list_seq_methods,
     .traverse = list_traverse,
+    .clear = list_clear,
+    .flag = TYPE_FLAG_GC,
 };
 
 Object* list_new(int n) {
@@ -92,12 +95,27 @@ static void list_destr(Object* obj) {
     assert(obj->type == &type_list);
     ListObject* l = (ListObject*) obj;
 
-    for (int i = 0; i < list_size(l); i++) {
-        DECREF(l->items[i]);
-    }
+    if (l->items) {
+        // NULL means gc_clearing
+        for (int i = 0; i < list_size(l); i++) {
+            DECREF(l->items[i]);
+        }
 
-    free(l->items);
-    gc_free(l);
+        free(l->items);
+        gc_free(l);
+    }
+}
+
+static void list_clear(Object* obj) {
+    ListObject* l = (ListObject*) obj;
+    int size = list_size(l);
+    Object** items = l->items;
+    l->len = 0;
+    l->items = NULL;
+    for (int i = 0; i < size; i++) {
+        DECREF(items[i]);
+    }
+    free(items);
 }
 
 int list_set(Object* list, int index, Object* o) {

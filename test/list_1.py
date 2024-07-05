@@ -29,3 +29,14 @@ r1.append(r2)
 r2.append(r1)
 print("r1: ", r1)
 print("r2: ", r2)
+
+def f():
+    tmp = ['ok']
+    tmp2 = ['tmp2']
+    tmp2.append(tmp2)
+    global a
+    a.append(tmp)
+    print("aa", a)
+
+f()
+print(a)

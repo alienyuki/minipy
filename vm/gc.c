@@ -15,7 +15,14 @@ static gc_head* gc_list = &gc_dummy_head;
 #define IS_COLLECTING(head) (((head)->gc_status & GC_STATUS_COLLECTING) == 1)
 #define SET_COLLECTING(head) (((head)->gc_status) |= GC_STATUS_COLLECTING)
 
+#define GC_STATUS_CLEARING (1 << 1)
+#define IS_CLEARING(head) (((head)->gc_status & GC_STATUS_CLEARING) == 1)
+#define SET_CLEARING(head) (((head)->gc_status) |= GC_STATUS_CLEARING)
+
+static int gc_cnt;
+
 void* gc_malloc(int size) {
+    gc_cnt += 1;
     gc_head* ret = malloc(size + sizeof(gc_head));
 
     ret->next = gc_list->next;
@@ -30,6 +37,8 @@ void* gc_malloc(int size) {
 }
 
 void gc_free(void* p) {
+    gc_cnt -= 1;
+
     gc_head* a = OBJ2GC(p);
     a->prev->next = a->next;
     a->next->prev = a->prev;
@@ -43,6 +52,26 @@ static int decrease_ref(Object* o, void* arg) {
         return 0;
     }
     return 1;
+}
+
+static int add_reachable(Object* o, void* arg) {
+    gc_head* root_obj = arg;
+    if ((o->type->flag & TYPE_FLAG_GC) != 0) {
+        gc_head* p = OBJ2GC(o);
+        // add to root objs since it is referenced by root
+        if (p->shadow_ref == 0) {
+            p->next->prev = p->prev;
+            p->prev->next = p->next;
+            
+            p->next = root_obj;
+            p->prev = root_obj->prev;
+            root_obj->prev->next = p;
+            root_obj->prev = p;
+
+            p->shadow_ref = 1;
+        }
+    }
+    return 0;
 }
 
 void gc() {
@@ -102,6 +131,16 @@ void gc() {
         p = q;
     }
 
+    // Traverse roots and mark all the accessed elements as reachable.
+    // Now the remaining unreachable is really unreachable.
+
+    gc_head* r = root_obj->next;
+    while (r != root_obj) {
+        Object* o = GC2OBJ(r);
+        o->type->traverse(o, add_reachable, root_obj);
+        r = r->next;
+    }
+
     printf("unreachable: \n");
     gc_head* un = unreachable->next;
     while (un != unreachable) {
@@ -111,11 +150,24 @@ void gc() {
     }
     printf("end unreachable\n");
 
-    // Traverse roots and mark all the accessed elements as reachable.
-    // Now the remaining unreachable is really unreachable.
     // Use TypeObject::clear to break reference cycles
     // TypeObject::clear should ensure that itself is destroyed but refcnt
     // is not changed and it is safe to call TypeObject::destr.
+    un = unreachable->next;
+    while (un != unreachable) {
+        Object* o = GC2OBJ(un);
+        object_print(1, o);
+        printf(" is gcing\n");
+        o->type->clear(o);
+        un = un->next;
+    }
+
+    un = unreachable->next;
+    while (un != unreachable) {
+        gc_head* p = un->next;
+        gc_free(GC2OBJ(un));
+        un = p;
+    }
 
     // recover the gc_list
     if (root_obj->next == root_obj) {
@@ -127,4 +179,6 @@ void gc() {
         gc_list->next->prev = gc_list;
         gc_list->prev->next = gc_list;
     }
+
+    printf("gc_cnt: %d\n", gc_cnt);
 }

@@ -21,6 +21,7 @@ typedef Object* (*binary_op_func)(Object*, Object*);
 
 typedef Object* (*str_func)(Object*);
 typedef void (*destr_func)(Object*);
+typedef void (*clear_func)(Object*);
 typedef hash_t (*hash_func)(Object*);
 typedef Object* (*compare_func)(Object*, Object*, cmp_op);
 typedef Object* (*getattr_func)(Object*, Object*);
@@ -60,14 +61,19 @@ struct TypeObject {
     compare_func cmp;
     getattr_func get_attr;
     traverse_func traverse;
+    clear_func clear;
 
     number_methods* num;
     seq_methods* seq;
     map_methods* map;
 
     Object* dict;
+
+    uint32_t flag;
 };
 
+
+#define TYPE_FLAG_GC (1 << 0)
 
 void object_print(int fd, Object* o);
 hash_t object_hash(Object* o);
