@@ -11,14 +11,6 @@ static gc_head gc_dummy_head = {
 
 static gc_head* gc_list = &gc_dummy_head;
 
-#define GC_STATUS_COLLECTING (1 << 0)
-#define IS_COLLECTING(head) (((head)->gc_status & GC_STATUS_COLLECTING) == 1)
-#define SET_COLLECTING(head) (((head)->gc_status) |= GC_STATUS_COLLECTING)
-
-#define GC_STATUS_CLEARING (1 << 1)
-#define IS_CLEARING(head) (((head)->gc_status & GC_STATUS_CLEARING) == 1)
-#define SET_CLEARING(head) (((head)->gc_status) |= GC_STATUS_CLEARING)
-
 static int gc_cnt;
 
 void* gc_malloc(int size) {
@@ -46,12 +38,11 @@ void gc_free(void* p) {
 }
 
 static int decrease_ref(Object* o, void* arg) {
-    if (!IS_COLLECTING(OBJ2GC(o))) {
-        SET_COLLECTING(OBJ2GC(o));
+    if ((o->type->flag & TYPE_FLAG_GC) != 0) {
+        object_print(1, o);
         OBJ2GC(o)->shadow_ref -= 1;
-        return 0;
     }
-    return 1;
+    return 0;
 }
 
 static int add_reachable(Object* o, void* arg) {

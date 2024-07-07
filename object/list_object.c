@@ -185,10 +185,8 @@ static int list_traverse(Object* o, tr_visit visit, void* args) {
     ListObject* l = (ListObject*) o;
     for (int i = 0; i < list_size(l); i++) {
         Object* item = l->items[i];
-        if (item->type->traverse != NULL) {
-            if (visit(item, args)) {
-                return 1;
-            }
+        if (visit(item, args)) {
+            return 1;
         }
     }
     return 0;
