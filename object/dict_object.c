@@ -2,6 +2,8 @@
 #include "str_object.h"
 #include "bool_object.h"
 #include "none_object.h"
+#include "tuple_object.h"
+#include "func_object.h"
 #include "debugger.h"
 
 #include <stdlib.h>
@@ -9,6 +11,7 @@
 
 static Object* dict_str(Object* obj);
 static void dict_destr(Object* obj);
+static Object* dict_get_attr(Object* owner, Object* attr);
 
 static Object* dict_get_sub(Object* dict, Object* k);
 static int     dict_set_sub(Object* dict, Object* k, Object* v);
@@ -22,6 +25,7 @@ TypeObject type_dict = {
     .name = "dict",
     .destr = dict_destr,
     .str = dict_str,
+    .get_attr = dict_get_attr,
     .map = &dict_seq_methods,
 };
 
@@ -246,4 +250,58 @@ static void dict_destr(Object* obj) {
 
     free(dict->entries);
     free(dict);
+}
+
+
+static Object* dict_get_attr(Object* owner, Object* attr) {
+    Object* ret = dict_get((DictObject*) owner->type->dict, attr);
+    if (ret) {
+        return ret;
+    }
+
+    return NULL;
+}
+
+#define DICT_CF(method) \
+static Object* dict_##method##_call(TupleObject* tuple);    \
+static CFuncObject dict_##method##_cf = {                   \
+    .base = {                                               \
+        .refcnt = IMMORTAL_REF,                             \
+        .type = &type_cfunc,                                \
+    },                                                      \
+    .call = dict_##method##_call,                           \
+}
+
+DICT_CF(pop);
+static Object* dict_pop_call(TupleObject* tuple) {
+    DictObject* dict = (DictObject*) tuple_get(tuple, 0);
+    Object* key = tuple_get(tuple, 1);
+    Object* ret = dict_pop(dict, key);
+    if (ret) {
+        return ret;
+    }
+
+    panic("dict key error");
+}
+
+static Object* s[256] = {};
+static int s_len;
+
+#define INSERT_CF(method) \
+    s[s_len] = string_new_cstr(#method);            \
+    dict_set((DictObject*) type_dict.dict,          \
+        s[s_len++], (Object*) &dict_##method##_cf)  \
+
+
+void dict_type_init() {
+    type_dict.dict = dict_new();
+    INSERT_CF(pop);
+}
+
+void dict_type_destroy() {
+    DECREF(type_dict.dict);
+    for (int i = 0; i < s_len; i++) {
+        DECREF(s[i]);
+    }
+    s_len = 0;
 }

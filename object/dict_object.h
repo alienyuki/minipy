@@ -22,4 +22,7 @@ void dict_del(DictObject* dict, Object* key);
 Object* dict_pop(DictObject* dict, Object* key);
 int dict_set(DictObject* dict, Object* key, Object* value);
 
+void dict_type_init();
+void dict_type_destroy();
+
 #endif

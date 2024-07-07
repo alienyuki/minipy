@@ -38,9 +38,10 @@ Object* object_get_attr(Object* owner, Object* name) {
         if (ret) {
             return ret;
         }
+        TODO("load attr while attr not in type");
     }
 
-    TODO("load attr when attr not in type");
+    panic("tp->get_attr is not implemented");
 }
 
 int object_set_item(Object* container, Object* sub, Object* v) {
