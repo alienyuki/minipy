@@ -23,7 +23,7 @@ static int list_traverse(Object* o, tr_visit visit, void* args);
 static Object* list_get_sub(Object* container, int index);
 static int list_set_sub(Object* container, int sub, Object* v);
 
-seq_methods list_seq_methods = {
+static seq_methods list_seq_methods = {
     .get_sub = list_get_sub,
     .set_sub = list_set_sub,
 };

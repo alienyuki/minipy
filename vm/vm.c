@@ -280,6 +280,26 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case BUILD_MAP: {
+            Object* dict = dict_new();
+            uint8_t arg = *(vm->pc + 1);
+
+            for (int i = 0; i < arg; i++) {
+                Object* k = vm->sp[-2];
+                Object* v = vm->sp[-1];
+                dict_set((DictObject*) dict, k, v);
+                DECREF(k);
+                DECREF(v);
+                vm->sp -= 2;
+            }
+
+            vm->sp += 1;
+            vm->sp[-1] = dict;
+            vm->pc += 2;
+
+            break;
+        }
+
         case LOAD_ATTR: {
             Object* owner = vm->sp[-1];
             vm->sp -= 1;

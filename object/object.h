@@ -43,7 +43,8 @@ typedef struct {
 } seq_methods;
 
 typedef struct {
-
+    Object* (*get_sub)(Object*, Object*);
+    int     (*set_sub)(Object*, Object*, Object*);
 } map_methods;
 
 

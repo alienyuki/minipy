@@ -1,6 +1,8 @@
 #include "dict_object.h"
 #include "str_object.h"
 #include "bool_object.h"
+#include "none_object.h"
+#include "debugger.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -8,10 +10,19 @@
 static Object* dict_str(Object* obj);
 static void dict_destr(Object* obj);
 
+static Object* dict_get_sub(Object* dict, Object* k);
+static int     dict_set_sub(Object* dict, Object* k, Object* v);
+
+static map_methods dict_seq_methods = {
+    .get_sub = dict_get_sub,
+    .set_sub = dict_set_sub,
+};
+
 TypeObject type_dict = {
     .name = "dict",
     .destr = dict_destr,
     .str = dict_str,
+    .map = &dict_seq_methods,
 };
 
 struct DictEntry {
@@ -200,6 +211,19 @@ static Object* dict_str(Object* obj) {
 
     return string_new(tmp, ti);
 }
+
+static Object* dict_get_sub(Object* dict, Object* k) {
+    Object* ret = dict_get((DictObject*) dict, k);
+    if (ret) {
+        return ret;
+    }
+    panic("dict key error");
+}
+
+static int dict_set_sub(Object* dict, Object* k, Object* v) {
+    return dict_set((DictObject*) dict, k, v);
+}
+
 
 static void dict_destr(Object* obj) {
     DictObject* dict = (DictObject*) obj;

@@ -45,8 +45,8 @@ Object* object_get_attr(Object* owner, Object* name) {
 
 int object_set_item(Object* container, Object* sub, Object* v) {
     if (container->type->map != NULL) {
-        TODO("map in set_item");
-    } 
+        return container->type->map->set_sub(container, sub, v);
+    }
 
     if (container->type->seq != NULL) {
         int index = ((LongObject*) sub)->n;
@@ -59,10 +59,13 @@ int object_set_item(Object* container, Object* sub, Object* v) {
 
 Object* object_get_item(Object* container, Object* sub) {
     if (container->type->map != NULL) {
-        TODO("map in get_item");
+        return container->type->map->get_sub(container, sub);
     } 
 
     if (container->type->seq != NULL) {
+        if (sub->type != &type_long) {
+            panic("Index error: argument should be integer");
+        }
         int index = ((LongObject*) sub)->n;
         return container->type->seq->get_sub(container, index);
     }
