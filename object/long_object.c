@@ -10,6 +10,7 @@
 static Object* long_str(Object* obj);
 static void long_destr(Object* obj);
 static Object* long_cmp(Object* o1, Object* o2, cmp_op op);
+static hash_t long_hash(Object* obj);
 
 static Object* long_add_func(Object* o1, Object* o2);
 static Object* long_fdiv_func(Object* o1, Object* o2);
@@ -33,6 +34,7 @@ TypeObject type_long = {
     .str  = long_str,
     .destr = long_destr,
     .cmp = long_cmp,
+    .hash = long_hash,
     .num = &long_number_method,
 };
 
@@ -104,6 +106,11 @@ static Object* long_cmp(Object* o1, Object* o2, cmp_op op) {
 
     }
     return false_new();
+}
+
+static hash_t long_hash(Object* obj) {
+    LongObject* o = (LongObject*) obj;
+    return o->n;
 }
 
 static Object* long_add_func(Object* o1, Object* o2) {

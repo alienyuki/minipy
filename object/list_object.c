@@ -58,6 +58,11 @@ static int str_list_idx;
 static Object* list_str(Object* obj) {
     assert(obj->type == &type_list);
     ListObject* l = (ListObject*) obj;
+
+    if (l->items == NULL) {
+        return string_new_cstr("[gcing list]");
+    }
+
     for (int i = 0; i < str_list_idx; i++) {
         if (str_list[i] == obj) {
             return string_new_cstr("[...]");

@@ -5,13 +5,16 @@
 #include "tuple_object.h"
 #include "func_object.h"
 #include "debugger.h"
+#include "gc.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 static Object* dict_str(Object* obj);
 static void dict_destr(Object* obj);
+static void dict_clear(Object* obj);
 static Object* dict_get_attr(Object* owner, Object* attr);
+static int dict_traverse(Object* o, tr_visit visit, void* args);
 
 static Object* dict_get_sub(Object* dict, Object* k);
 static int     dict_set_sub(Object* dict, Object* k, Object* v);
@@ -26,7 +29,10 @@ TypeObject type_dict = {
     .destr = dict_destr,
     .str = dict_str,
     .get_attr = dict_get_attr,
+    .traverse = dict_traverse,
+    .clear = dict_clear,
     .map = &dict_seq_methods,
+    .flag = TYPE_FLAG_GC,
 };
 
 struct DictEntry {
@@ -38,7 +44,7 @@ struct DictEntry {
 
 Object* dict_new() {
     const static int INITAIL_SIZE = 8;
-    DictObject* ret = malloc(sizeof(DictObject));
+    DictObject* ret = gc_malloc(sizeof(DictObject));
     DictEntry* entries = malloc(sizeof(DictEntry) * INITAIL_SIZE);
     memset(entries, 0, sizeof(DictEntry) * INITAIL_SIZE);
     ret->entries = entries;
@@ -169,8 +175,24 @@ int dict_set(DictObject* dict, Object* key, Object* value) {
     return 0;
 }
 
+static Object* str_dict[64];
+static int str_dict_idx;
+
+
 static Object* dict_str(Object* obj) {
     DictObject* dict = (DictObject*) obj;
+
+    if (dict->entries == NULL) {
+        return string_new_cstr("{gcing dict}");
+    }
+
+    for (int i = 0; i < str_dict_idx; i++) {
+        if (str_dict[i] == obj) {
+            return string_new_cstr("{...}");
+        }
+    }
+    str_dict[str_dict_idx++] = obj;
+
     uint8_t tmp[4096];
     int ti = 0;
     tmp[ti] = '{';
@@ -213,6 +235,7 @@ static Object* dict_str(Object* obj) {
     tmp[ti] = '}';
     ti += 1;
 
+    str_dict_idx -= 1;
     return string_new(tmp, ti);
 }
 
@@ -228,9 +251,29 @@ static int dict_set_sub(Object* dict, Object* k, Object* v) {
     return dict_set((DictObject*) dict, k, v);
 }
 
+static int dict_traverse(Object* o, tr_visit visit, void* args) {
+    DictObject* dict = (DictObject*) o;
+    for (int i = 0; i < dict->nentries; i++) {
+        DictEntry* e = &(dict->entries[i]);
+        if (e->key == NULL) {
+            continue;
+        }
+        while (e) {
+            visit(e->key, args);
+            visit(e->value, args);
+            e = e->next;
+        }
+    }
+
+    return 0;
+}
 
 static void dict_destr(Object* obj) {
     DictObject* dict = (DictObject*) obj;
+
+    if (dict->entries == NULL) {
+        return;
+    }
 
     for (int i = 0; i < dict->nentries; i++) {
         DictEntry* e1 = &dict->entries[i];
@@ -249,9 +292,35 @@ static void dict_destr(Object* obj) {
     }
 
     free(dict->entries);
-    free(dict);
+    gc_free(dict);
 }
 
+static void dict_clear(Object* obj) {
+    DictObject* dict = (DictObject*) obj;
+
+    DictEntry* entries = dict->entries;
+    dict->entries = NULL;
+    int n = dict->nentries;
+    dict->nentries = -1;
+
+    for (int i = 0; i < n; i++) {
+        DictEntry* e1 = &entries[i];
+        DictEntry* e2 = e1->next;
+        if (e1->key != NULL) {
+            DECREF(e1->key);
+            DECREF(e1->value);
+        }
+        while (e2 != NULL) {
+            e1 = e2;
+            e2 = e2->next;
+            DECREF(e1->key);
+            DECREF(e1->value);
+            free(e1);
+        }
+    }
+
+    free(entries);
+}
 
 static Object* dict_get_attr(Object* owner, Object* attr) {
     Object* ret = dict_get((DictObject*) owner->type->dict, attr);
