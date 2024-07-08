@@ -73,8 +73,6 @@ void gc() {
     while (p != gc_list) {
         p->shadow_ref = GC2OBJ(p)->refcnt;
         p->gc_status = 0;
-        object_print(1, GC2OBJ(p));
-        printf(" %d\n", p->shadow_ref);
         p = p->next;
     }
     // Traverse and decrease shadow_ref.
@@ -132,14 +130,10 @@ void gc() {
         r = r->next;
     }
 
-    printf("unreachable: \n");
     gc_head* un = unreachable->next;
     while (un != unreachable) {
-        object_print(1, GC2OBJ(un));
-        printf("\n");
         un = un->next;
     }
-    printf("end unreachable\n");
 
     // Use TypeObject::clear to break reference cycles
     // TypeObject::clear should ensure that itself is destroyed but refcnt
@@ -147,8 +141,6 @@ void gc() {
     un = unreachable->next;
     while (un != unreachable) {
         Object* o = GC2OBJ(un);
-        object_print(1, o);
-        printf(" is gcing\n");
         o->type->clear(o);
         un = un->next;
     }
@@ -170,6 +162,10 @@ void gc() {
         gc_list->next->prev = gc_list;
         gc_list->prev->next = gc_list;
     }
+}
 
-    printf("gc_cnt: %d\n", gc_cnt);
+void gc_complete_assert() {
+    if (gc_cnt != 0) {
+        panic("gc is not complete");
+    }
 }

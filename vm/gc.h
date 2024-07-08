@@ -18,5 +18,6 @@ struct gc_head {
 void* gc_malloc(int size);
 void gc_free(void* p);
 void gc();
+void gc_complete_assert();
 
 #endif

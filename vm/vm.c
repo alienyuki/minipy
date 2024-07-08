@@ -623,4 +623,7 @@ void vm_destroy(pvm* vm) {
     string_type_destroy();
     list_type_destroy();
     dict_type_destroy();
+
+    gc();
+    gc_complete_assert();
 }
