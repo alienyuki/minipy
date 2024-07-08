@@ -29,6 +29,8 @@ CodeObject* init_code(CodeCons* code_cons) {
     INCREF(code->localsplusnames);
     code->names = code_cons->names;
     INCREF(code->names);
+    code->name = code_cons->name;
+    INCREF(code->name);
 
     memcpy(code->bytecodes, bytecodes->str, bytecodes->size);
     return code;
@@ -45,5 +47,6 @@ static void code_destr(Object* obj) {
     DECREF(code->consts);
     DECREF(code->localsplusnames);
     DECREF(code->names);
+    DECREF(code->name);
     free(obj);
 }

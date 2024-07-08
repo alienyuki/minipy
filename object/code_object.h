@@ -13,6 +13,7 @@ typedef struct {
     int stack_size;
     TupleObject* localsplusnames;
     TupleObject* names;
+    Object *name;
     uint8_t bytecodes[];
 } CodeObject;
 

@@ -15,6 +15,7 @@ typedef struct {
 typedef struct {
     Object base;
     Object* (*call)(TupleObject*);
+    char* name;
 } CFuncObject;
 
 Object* init_builtin_func();

@@ -40,7 +40,17 @@ Object* func_new(CodeObject* code) {
 }
 
 static Object* func_str(Object* obj) {
-    return string_new_cstr("func!");
+    FuncObject* f = (FuncObject*) obj;
+    char tmp[128];
+    char* s = strcpy(tmp, "<function ");
+    s += sizeof("<function ") - 1;
+    StrObject* func_name = (StrObject*) f->code->name;
+    strncpy(s, (char*) func_name->str, func_name->size);
+    s += func_name->size;
+    strcpy(s, ">");
+    s += sizeof(">") - 1;
+
+    return string_new((uint8_t*) tmp, s - tmp);
 }
 
 static void func_destr(Object* obj) {
@@ -50,7 +60,18 @@ static void func_destr(Object* obj) {
 }
 
 static Object* cfunc_str(Object* obj) {
-    return string_new_cstr("C func!");
+    CFuncObject* cf = (CFuncObject*) obj;
+
+    char tmp[128];
+    char* s = tmp;
+    s = strcpy(tmp, "<builtin C function ") - 1;
+    s += sizeof("<builtin C function ");
+    s = strcpy(s, cf->name);
+    s += strlen(cf->name);
+    s = strcpy(s, ">");
+    s += sizeof(">") - 1;
+
+    return string_new((uint8_t*) tmp, s - tmp);
 }
 
 static void cfunc_destr(Object* obj) {
@@ -65,6 +86,7 @@ static CFuncObject cf_print = {
         .type = &type_cfunc,
     },
     .call = cf_print_call,
+    .name = "print",
 };
 
 static Object* cf_print_call(TupleObject* tuple) {
@@ -72,9 +94,7 @@ static Object* cf_print_call(TupleObject* tuple) {
         object_print(1, tuple->items[i]);
     }
 
-    Object* nl = string_new_cstr("\n");
-    object_print(1, nl);
-    DECREF(nl);
+    printf("\n");
     return string_new_cstr("cf ret\n");
 }
 
@@ -86,6 +106,7 @@ static CFuncObject cf_input = {
         .type = &type_cfunc,
     },
     .call = cf_input_call,
+    .name = "print",
 };
 
 static Object* cf_input_call(TupleObject* tuple) {
