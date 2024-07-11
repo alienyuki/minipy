@@ -33,5 +33,6 @@
 #define BINOP_REMINDER 6
 #define BINOP_SUB 10
 #define BINOP_IADD 13
+#define BINOP_ISUB 23
 
 #endif

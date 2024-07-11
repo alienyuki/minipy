@@ -142,3 +142,15 @@ Object* object_binary_iadd(Object* o1, Object* o2) {
 
     return o1->type->num->add_func(o1, o2);
 }
+
+Object* object_binary_isub(Object* o1, Object* o2) {
+    if (o1->type != o2->type) {
+        TODO("different types in binary isub");
+    }
+
+    if (o1->type->num->isub_func != NULL) {
+        return o1->type->num->isub_func(o1, o2);
+    }
+
+    return o1->type->num->sub_func(o1, o2);
+}

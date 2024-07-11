@@ -111,6 +111,7 @@ static binary_op_func binary_ops[] = {
     [BINOP_REMINDER] = object_binary_remainder,
     [BINOP_SUB] = object_binary_sub,
     [BINOP_IADD] = object_binary_iadd,
+    [BINOP_ISUB] = object_binary_isub,
 };
 
 static int pvm_run_frame(pvm* vm) {
@@ -188,7 +189,9 @@ static int pvm_run_frame(pvm* vm) {
 
             printf("sp: %p, bottom: %p\n", vm->sp, frame->localsplus);
             while (vm->sp > frame->localsplus) {
-                DECREF(vm->sp[-1]);
+                if (vm->sp[-1]) {
+                    DECREF(vm->sp[-1]);
+                }
                 vm->sp -= 1;
             }
             // Object** f = frame->localsplus + frame->code->localsplusnames->size;
@@ -384,6 +387,10 @@ static int pvm_run_frame(pvm* vm) {
             Object* v1 = vm->sp[-1];
             vm->sp -= 1;
 
+            if (binary_ops[arg] == NULL) {
+                TODO("binary_ops %d is not implemented", arg);
+            }
+
             Object* v = binary_ops[arg](v1, v2);
             vm->sp += 1;
             vm->sp[-1] = v;
@@ -432,7 +439,9 @@ static int pvm_run_frame(pvm* vm) {
             // push retval to prev_frame's stack
 
             while (vm->sp > frame->localsplus) {
-                DECREF(vm->sp[-1]);
+                if (vm->sp[-1]) {
+                    DECREF(vm->sp[-1]);
+                }
                 vm->sp -= 1;
             }
 

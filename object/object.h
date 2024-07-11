@@ -35,6 +35,7 @@ typedef struct {
     binary_op_func remainder_func;
     binary_op_func sub_func;
     binary_op_func iadd_func;
+    binary_op_func isub_func;
 } number_methods;
 
 typedef struct {
@@ -99,5 +100,6 @@ Object* object_binary_sub(Object* o1, Object* o2);
 Object* object_binary_fdiv(Object* o1, Object* o2);
 Object* object_binary_remainder(Object* o1, Object* o2);
 Object* object_binary_iadd(Object* o1, Object* o2);
+Object* object_binary_isub(Object* o1, Object* o2);
 
 #endif

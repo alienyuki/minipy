@@ -18,6 +18,7 @@ static Object* long_mul_func(Object* o1, Object* o2);
 static Object* long_reminder_func(Object* o1, Object* o2);
 static Object* long_sub_func(Object* o1, Object* o2);
 static Object* long_iadd_func(Object* o1, Object* o2);
+static Object* long_isub_func(Object* o1, Object* o2);
 
 static number_methods long_number_method = {
     .add_func = long_add_func,
@@ -26,6 +27,7 @@ static number_methods long_number_method = {
     .remainder_func = long_reminder_func,
     .sub_func = long_sub_func,
     .iadd_func = long_iadd_func,
+    .isub_func = long_isub_func,
 };
 
 
@@ -166,4 +168,13 @@ static Object* long_iadd_func(Object* o1, Object* o2) {
     LongObject* l2 = (LongObject*) o2;
 
     return long_new(l1->n + l2->n);
+}
+
+static Object* long_isub_func(Object* o1, Object* o2) {
+    assert(o1->type == &type_long);
+    assert(o2->type == &type_long);
+    LongObject* l1 = (LongObject*) o1;
+    LongObject* l2 = (LongObject*) o2;
+
+    return long_new(l1->n - l2->n);
 }
