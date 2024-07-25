@@ -3,10 +3,13 @@
 
 #define POP_TOP 1
 #define PUSH_NULL 2
+#define END_FOR 4
 #define BINARY_SUBSCR 25
 #define STORE_SUBSCR 60
+#define GET_ITER 68
 #define RETURN_VALUE 83
 #define STORE_NAME 90
+#define FOR_ITER 93
 #define STORE_GLOBAL 97
 #define LOAD_CONST 100
 #define LOAD_NAME 101

@@ -149,6 +149,11 @@ static int pvm_run_frame(pvm* vm) {
             break;
         }
 
+        case END_FOR: {
+            TODO("END_FOR instruction");
+            break;
+        }
+
         case BINARY_SUBSCR: {
             Object* sub = vm->sp[-1];
             vm->sp -= 1;
@@ -180,6 +185,43 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->pc += 4;
 
+            break;
+        }
+
+        case GET_ITER: {
+            Object* iterable = vm->sp[-1];
+            vm->sp -= 1;
+            Object* iter = object_get_iter(iterable);
+            vm->sp += 1;
+            vm->sp[-1] = iter;
+            DECREF(iterable);
+
+            vm->pc += 2;
+            break;
+        }
+
+        case FOR_ITER: {
+            Object* iter = vm->sp[-1];
+            Object* next_obj = iter->type->itnext(iter);
+            if (!next_obj) {
+                uint8_t arg = *(vm->pc + 1);
+                printf("%d\n", arg);
+                vm->pc += 2 * arg + 4;
+                if (*vm->pc == END_FOR) {
+                    DECREF(iter);
+                    vm->sp -= 1;
+                    vm->pc += 2;
+                } else {
+                    panic("FOR_ITER should jump to END_FOR");
+                }
+                break;
+            }
+
+            vm->sp += 1;
+            vm->sp[-1] = next_obj;
+            INCREF(next_obj);
+
+            vm->pc += 4;
             break;
         }
 

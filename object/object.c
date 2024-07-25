@@ -74,6 +74,16 @@ Object* object_get_item(Object* container, Object* sub) {
     UNREACHABLE();
 }
 
+
+Object* object_get_iter(Object* iterable) {
+    if (!iterable->type->iter) {
+        panic("not iterable!");
+    }
+
+    return iterable->type->iter(iterable);
+}
+
+
 void inc_ref(Object* o) {
     if (o->refcnt != IMMORTAL_REF) {
         o->refcnt += 1;

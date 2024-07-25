@@ -11,6 +11,12 @@ typedef struct {
     int capacity;
 } ListObject;
 
+typedef struct {
+    Object base;
+    ListObject* list;
+    int index;
+} ListIterObject;
+
 extern TypeObject type_list;
 
 void list_type_init();

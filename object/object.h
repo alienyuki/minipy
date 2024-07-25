@@ -27,6 +27,8 @@ typedef Object* (*compare_func)(Object*, Object*, cmp_op);
 typedef Object* (*getattr_func)(Object*, Object*);
 typedef int (*tr_visit)(Object*, void*);
 typedef int (*traverse_func)(Object*, tr_visit, void*);
+typedef Object* (*getiter_func)(Object*);
+typedef Object* (*iternext_func)(Object*);
 
 typedef struct {
     binary_op_func add_func;
@@ -64,6 +66,8 @@ struct TypeObject {
     getattr_func get_attr;
     traverse_func traverse;
     clear_func clear;
+    getiter_func iter;
+    iternext_func itnext;
 
     number_methods* num;
     seq_methods* seq;
@@ -85,6 +89,7 @@ Object* object_get_attr(Object* owner, Object* name);
 
 Object* object_get_item(Object* container, Object* sub);
 int object_set_item(Object* container, Object* sub, Object* v);
+Object* object_get_iter(Object* iterable);
 
 #define IMMORTAL_REF (1 << 30)
 

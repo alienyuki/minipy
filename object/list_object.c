@@ -19,9 +19,13 @@ static void list_clear(Object* obj);
 static void list_expand_size(ListObject* o);
 static Object* list_get_attr(Object* owner, Object* attr);
 static int list_traverse(Object* o, tr_visit visit, void* args);
+static Object* list_iter(Object* iterable);
 
 static Object* list_get_sub(Object* container, int index);
 static int list_set_sub(Object* container, int sub, Object* v);
+
+static void listiter_destr(Object* obj);
+static Object* listiter_next(Object* iterable);
 
 static seq_methods list_seq_methods = {
     .get_sub = list_get_sub,
@@ -37,7 +41,14 @@ TypeObject type_list = {
     .seq = &list_seq_methods,
     .traverse = list_traverse,
     .clear = list_clear,
+    .iter = list_iter,
     .flag = TYPE_FLAG_GC,
+};
+
+TypeObject type_listiter = {
+    .name = "listiter",
+    .destr = listiter_destr,
+    .itnext = listiter_next,
 };
 
 Object* list_new(int n) {
@@ -195,6 +206,32 @@ static int list_traverse(Object* o, tr_visit visit, void* args) {
         }
     }
     return 0;
+}
+
+static Object* list_iter(Object* iterable) {
+    ListIterObject* iter = malloc(sizeof(ListIterObject));
+    iter->base.type = &type_listiter;
+    iter->base.refcnt = 1;
+    iter->list = (ListObject*) iterable;
+    INCREF(iter->list);
+    iter->index = 0;
+    return (Object*) iter;
+}
+
+static void listiter_destr(Object* obj) {
+    ListIterObject* iter = (ListIterObject*) obj;
+    DECREF(iter->list);
+    free(obj);
+}
+
+static Object* listiter_next(Object* iter) {
+    ListIterObject* it = (ListIterObject*) iter;
+    if (it->index == it->list->len) {
+        return NULL;
+    }
+
+    it->index += 1;
+    return it->list->items[it->index-1];
 }
 
 int list_size(ListObject* list) {
