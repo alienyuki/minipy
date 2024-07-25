@@ -231,7 +231,10 @@ static Object* listiter_next(Object* iter) {
     }
 
     it->index += 1;
-    return it->list->items[it->index-1];
+
+    Object* next_obj = it->list->items[it->index-1];
+    INCREF(next_obj);
+    return next_obj;
 }
 
 int list_size(ListObject* list) {

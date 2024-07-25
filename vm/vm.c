@@ -219,7 +219,6 @@ static int pvm_run_frame(pvm* vm) {
 
             vm->sp += 1;
             vm->sp[-1] = next_obj;
-            INCREF(next_obj);
 
             vm->pc += 4;
             break;
@@ -395,6 +394,10 @@ static int pvm_run_frame(pvm* vm) {
             Object* name = tuple_get(frame->code->names, arg >> 1);
             Object* gi = dict_get(vm->globals, name);
 
+            if (!gi) {
+                panic("key is not exist in global");
+            }
+
             if (arg & 1) {
                 vm->sp += 1;
                 vm->sp[-1] = NULL;
@@ -507,8 +510,6 @@ static int pvm_run_frame(pvm* vm) {
 
         case MAKE_FUNCTION: {
             Object* code = vm->sp[-1];
-
-            printf("%p, %s\n", code, code->type->name);
             Object* func = func_new((CodeObject*) code);
 
             DECREF(code);

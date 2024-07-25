@@ -78,17 +78,18 @@ static void cfunc_destr(Object* obj) {
     free(obj);
 }
 
-static Object* cf_print_call(TupleObject* tuple);
+#define CF(cfunc) \
+static Object* cf_##cfunc##_call(TupleObject* tuple);   \
+static CFuncObject cf_##cfunc = {                       \
+    .base = {                                           \
+        .refcnt = IMMORTAL_REF,                         \
+        .type = &type_cfunc,                            \
+    },                                                  \
+    .call = cf_##cfunc##_call,                          \
+    .name = #cfunc,                                     \
+}
 
-static CFuncObject cf_print = {
-    .base = {
-        .refcnt = IMMORTAL_REF,
-        .type = &type_cfunc,
-    },
-    .call = cf_print_call,
-    .name = "print",
-};
-
+CF(print);
 static Object* cf_print_call(TupleObject* tuple) {
     for (int i = 0; i < tuple->size; i++) {
         object_print(1, tuple->items[i]);
@@ -98,17 +99,7 @@ static Object* cf_print_call(TupleObject* tuple) {
     return string_new_cstr("cf ret\n");
 }
 
-static Object* cf_input_call(TupleObject* tuple);
-
-static CFuncObject cf_input = {
-    .base = {
-        .refcnt = IMMORTAL_REF,
-        .type = &type_cfunc,
-    },
-    .call = cf_input_call,
-    .name = "print",
-};
-
+CF(input);
 static Object* cf_input_call(TupleObject* tuple) {
     if (tuple_size(tuple) == 1) {
         object_print(1, tuple_get(tuple, 0));
@@ -130,6 +121,39 @@ static Object* cf_input_call(TupleObject* tuple) {
     return string_new((uint8_t*) input, size);;
 }
 
+CF(iter);
+static Object* cf_iter_call(TupleObject* tuple) {
+    if (tuple_size(tuple) != 1) {
+        panic("iter() need 1 argument");
+    }
+
+    Object* iterable = tuple_get(tuple, 0);
+    Object* iter = object_get_iter(iterable);
+    return iter;
+}
+
+CF(next);
+static Object* cf_next_call(TupleObject* tuple) {
+    int size = tuple_size(tuple);
+    if (size != 1 && size != 2) {
+        panic("iter() need 1 or 2 argument(s)");
+    }
+
+    Object* iter = tuple_get(tuple, 0);
+    Object* next_obj = iter->type->itnext(iter);
+
+    if (next_obj) {
+        return next_obj;
+    }
+
+    if (size == 1) {
+        panic("Iteration ends");
+    }
+
+    Object* ret = tuple_get(tuple, 1);
+    INCREF(ret);
+    return ret;
+}
 
 // builtin functions
 static struct {
@@ -139,6 +163,8 @@ static struct {
 } btfs[] = {
     {"print", &cf_print, NULL},
     {"input", &cf_input, NULL},
+    {"iter", &cf_iter, NULL},
+    {"next", &cf_next, NULL},
     {NULL, NULL, NULL}
 };
 
