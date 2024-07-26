@@ -24,8 +24,12 @@ static Object* list_iter(Object* iterable);
 static Object* list_get_sub(Object* container, int index);
 static int list_set_sub(Object* container, int sub, Object* v);
 
+
+static Object* lisitert_str(Object* obj);
 static void listiter_destr(Object* obj);
 static Object* listiter_next(Object* iterable);
+static int listiter_traverse(Object* o, tr_visit visit, void* args);
+static void listiter_clear(Object* obj);
 
 static seq_methods list_seq_methods = {
     .get_sub = list_get_sub,
@@ -49,6 +53,10 @@ TypeObject type_listiter = {
     .name = "listiter",
     .destr = listiter_destr,
     .itnext = listiter_next,
+    .str  = lisitert_str,
+    .traverse = listiter_traverse,
+    .clear = listiter_clear,
+    .flag = TYPE_FLAG_GC,
 };
 
 Object* list_new(int n) {
@@ -209,7 +217,7 @@ static int list_traverse(Object* o, tr_visit visit, void* args) {
 }
 
 static Object* list_iter(Object* iterable) {
-    ListIterObject* iter = malloc(sizeof(ListIterObject));
+    ListIterObject* iter = gc_malloc(sizeof(ListIterObject));
     iter->base.type = &type_listiter;
     iter->base.refcnt = 1;
     iter->list = (ListObject*) iterable;
@@ -218,10 +226,42 @@ static Object* list_iter(Object* iterable) {
     return (Object*) iter;
 }
 
+static Object* lisitert_str(Object* obj) {
+    char tmp[64];
+    strcpy(tmp, "listiter at ");
+    int size = sizeof("listiter at ") - 1;
+    size += sprintf(tmp + size, "%p", obj);
+
+    return string_new((uint8_t*) tmp, size);
+}
+
+static int listiter_traverse(Object* o, tr_visit visit, void* args) {
+    ListIterObject* iter = (ListIterObject*) o;
+    if (iter->list != NULL) {
+        if (visit((Object*) iter->list, args)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static void listiter_clear(Object* obj) {
+    ListIterObject* iter = (ListIterObject*) obj;
+
+    if (iter->list != NULL) {
+        DECREF(iter->list);
+        iter->list = NULL;
+        printf("Ha??");
+    }
+}
+
 static void listiter_destr(Object* obj) {
     ListIterObject* iter = (ListIterObject*) obj;
-    DECREF(iter->list);
-    free(obj);
+    if (iter->list != NULL) {
+        DECREF(iter->list);
+    }
+    gc_free(obj);
 }
 
 static Object* listiter_next(Object* iter) {
