@@ -565,6 +565,8 @@ pvm* vm_init(int default_dbg) {
     } else {
         vm->instr_step = INT32_MAX;
     }
+
+    memset(vm->last_dbg_cmd, 0, sizeof(vm->last_dbg_cmd));
     return vm;
 }
 

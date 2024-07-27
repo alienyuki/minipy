@@ -1,5 +1,7 @@
+#include "str_object.h"
 #include "pdb.h"
 #include "debugger.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,6 +28,12 @@ static int dbg_command(pvm* vm, char* input) {
     while (*input && *input == ' ') {
         input++;
     }
+    if (*input == '\n') {
+        strcpy(input, vm->last_dbg_cmd);
+    } else {
+        strcpy(vm->last_dbg_cmd, input);
+    }
+
     cmd[0] = input;
     int cmd_index = 1;
     input++;
@@ -83,6 +91,37 @@ static int dbg_command(pvm* vm, char* input) {
         } 
         break;
     }
+    case 'p': {
+        if (strcmp(cmd[0], "p") == 0) {
+            if (cmd_index - 1 < 1) {
+                printf("SyntaxError: %s should follow one argument", cmd[0]);
+            }
+
+            TupleObject* locals = vm->frame->code->localsplusnames;
+            for (int i = 0; i < tuple_size(locals); i++) {
+                StrObject* s = (StrObject*) tuple_get(locals, i);
+                if ((strlen(cmd[1]) == s->size)
+                    && memcmp(s->str, cmd[1], s->size) == 0) {
+                    object_print(1, vm->frame->localsplus[i]);
+                    printf("\n");
+                    break;
+                }
+            }
+
+            Object* s = string_new((uint8_t*) cmd[1], strlen(cmd[1]));
+            Object* v = dict_get(vm->globals, s);
+            DECREF(s);
+            if (v) {
+                object_print(1, v);
+                printf("\n");
+                break;
+            }
+            printf("name \'%s\' is not defined\n", cmd[1]);
+        } else {
+            goto unknown;
+        }
+        break;
+    }
     default:
         goto unknown;
     }
@@ -102,7 +141,8 @@ int pdb(pvm* vm) {
         }
 
         uint8_t* pc_base = vm->frame->code->bytecodes;
-        Object** sp_base = vm->frame->localsplus;
+        int nlocalsplus = vm->frame->code->localsplusnames->size;
+        Object** sp_base = vm->frame->localsplus + nlocalsplus;
         printf("pc: %ld, sp: %ld\n", vm->pc - pc_base, vm->sp - sp_base);
     }
     return 0;

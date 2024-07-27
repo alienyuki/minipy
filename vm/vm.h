@@ -13,6 +13,7 @@ typedef struct {
     Object** sp;
 
     int instr_step;
+    char last_dbg_cmd[256];
 } pvm;
 
 int pvm_run(pvm* vm, CodeObject* code);
