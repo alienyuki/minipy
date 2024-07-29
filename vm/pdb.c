@@ -122,14 +122,18 @@ static int dbg_command(pvm* vm, char* input) {
             }
 
             TupleObject* locals = vm->frame->code->localsplusnames;
+            int find = 0;
             for (int i = 0; i < tuple_size(locals); i++) {
                 StrObject* s = (StrObject*) tuple_get(locals, i);
-                if ((strlen(cmd[1]) == s->size)
-                    && memcmp(s->str, cmd[1], s->size) == 0) {
+                if (oscscmp(s, cmd[1]) == 0) {
                     object_print(1, vm->frame->localsplus[i]);
                     printf("\n");
+                    find = 1;
                     break;
                 }
+            }
+            if (find) {
+                break;
             }
 
             Object* s = string_new((uint8_t*) cmd[1], strlen(cmd[1]));

@@ -86,8 +86,11 @@ static Object* string_get_attr(Object* owner, Object* attr) {
 }
 
 int oscscmp(StrObject* os, char* cs) {
-    return (strlen(cs) == os->size)
-            && memcmp(os->str, cs, os->size);
+    if (strlen(cs) != os->size) {
+        return 1;
+    }
+
+    return memcmp(os->str, cs, os->size);
 }
 
 static Object* str_upper_call(TupleObject* tuple);
