@@ -60,7 +60,31 @@ static int dbg_command(pvm* vm, char* input) {
     case 'b': {
         // function or line number
         if (strcmp(cmd[0], "b") == 0) {
-            TODO("'b' command in debugger");
+            if (cmd_index == 2) {
+                // Add :
+                Object* s = string_new((uint8_t*) cmd[1], strlen(cmd[1]));
+                Object* v = dict_get(vm->globals, s);
+                DECREF(s);
+                if (!v) {
+                    printf("%s is not a loaded function\n"
+                           "If %s is a function, use bf to break it\n",
+                           cmd[1], cmd[1]);
+                    break;
+                }
+                if (!(v->type == &type_func || v->type == &type_cfunc)) {
+                    printf("%s is not a function\n", cmd[1]);
+                    break;
+                }
+
+                vm->breakpoints[vm->bpn].type = BP_FUNCTION;
+                strcpy(vm->breakpoints[vm->bpn].f.func, cmd[1]);
+                vm->bpn += 1;
+
+            } else if (cmd_index == 1) {
+                TODO("print break points");
+            }
+        } else if (strcmp(cmd[0], "bf") == 0) {
+            TODO("bf command");
         } else {
             goto unknown;
         }
@@ -93,7 +117,7 @@ static int dbg_command(pvm* vm, char* input) {
     }
     case 'p': {
         if (strcmp(cmd[0], "p") == 0) {
-            if (cmd_index - 1 < 1) {
+            if (cmd_index < 2) {
                 printf("SyntaxError: %s should follow one argument", cmd[0]);
             }
 
@@ -116,7 +140,7 @@ static int dbg_command(pvm* vm, char* input) {
                 printf("\n");
                 break;
             }
-            printf("name \'%s\' is not defined\n", cmd[1]);
+            printf("name '%s' is not defined\n", cmd[1]);
         } else {
             goto unknown;
         }
@@ -131,6 +155,20 @@ unknown:
     return 1;
 }
 
+int pdb_triggered(pvm* vm) {
+    uint8_t* pc_base = vm->frame->code->bytecodes;
+    if (vm->pc - pc_base == 0) {
+        StrObject* s = (StrObject*) vm->frame->code->name;
+        for (int i = 0; i < vm->bpn; i++) {
+            if (oscscmp(s, vm->breakpoints[i].f.func) == 0) {
+                vm->instr_step = 0;
+                printf("break at function %s\n", vm->breakpoints[i].f.func);
+                return 1;
+            }
+        }
+    }
+    return vm->instr_step == 0;
+}
 
 int pdb(pvm* vm) {
     while (vm->instr_step == 0) {

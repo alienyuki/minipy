@@ -35,6 +35,9 @@ def h():
     l.append(it)
     print(l)
 
+
+a = 0
 f()
 g()
 h()
+print(a)

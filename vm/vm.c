@@ -34,7 +34,7 @@ static int pvm_run_frame(pvm* vm) {
     FrameObject* frame = vm->frame;
     int err = 0;
     while (!err) {
-        if (vm->instr_step == 0) {
+        if (pdb_triggered(vm)) {
             pdb(vm);
         }
         vm->instr_step -= 1;
@@ -567,6 +567,7 @@ pvm* vm_init(int default_dbg) {
     }
 
     memset(vm->last_dbg_cmd, 0, sizeof(vm->last_dbg_cmd));
+    vm->bpn = 0;
     return vm;
 }
 
