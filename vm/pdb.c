@@ -22,6 +22,52 @@ static int read_line(char* prompt, char* input, int size) {
     return 0;
 }
 
+static void bp_print(break_point* bp, int i) {
+    if (bp->type == BP_FUNCTION) {
+        printf("%3d  at %s:%d\n", i, bp->f.func, bp->f.bc);
+    } else {
+        TODO("bp type not complete in print");
+    }
+}
+
+static int bf(pvm* vm, char* cmd[]) {
+    int bc = 0;
+    for (char* c = cmd[1]; *c != '\0'; c++) {
+        if (*c == ':') {
+            *c = '\0';
+            c++;
+            bc = atoi(c);
+            break;
+        }
+    }
+    Object* s = string_new((uint8_t*) cmd[1], strlen(cmd[1]));
+    Object* v = dict_get(vm->globals, s);
+    DECREF(s);
+    // 'b' command or 'bf' command?
+    int is_b_cmd = (cmd[0][1] == '\0');
+    if (!v) {
+        if (is_b_cmd) {
+            printf("%s is not a loaded function.\n"
+                    "If %s is a function, use bf to break it.\n",
+                    cmd[1], cmd[1]);
+            return 0;
+        }
+    }
+
+    if (is_b_cmd) {
+        if (!(v->type == &type_func || v->type == &type_cfunc)) {
+            printf("%s is not a function\n", cmd[1]);
+            return 0;
+        }
+    }
+
+    vm->breakpoints[vm->bpn].type = BP_FUNCTION;
+    strcpy(vm->breakpoints[vm->bpn].f.func, cmd[1]);
+    vm->breakpoints[vm->bpn].f.bc = bc;
+    vm->bpn += 1;
+    return 1;
+}
+
 static int dbg_command(pvm* vm, char* input) {
     // convert input to cmd
     char* cmd[10];
@@ -61,30 +107,25 @@ static int dbg_command(pvm* vm, char* input) {
         // function or line number
         if (strcmp(cmd[0], "b") == 0) {
             if (cmd_index == 2) {
-                // Add :
-                Object* s = string_new((uint8_t*) cmd[1], strlen(cmd[1]));
-                Object* v = dict_get(vm->globals, s);
-                DECREF(s);
-                if (!v) {
-                    printf("%s is not a loaded function\n"
-                           "If %s is a function, use bf to break it\n",
-                           cmd[1], cmd[1]);
-                    break;
+                if (bf(vm, cmd) != 1) {
+                    return 1;
                 }
-                if (!(v->type == &type_func || v->type == &type_cfunc)) {
-                    printf("%s is not a function\n", cmd[1]);
-                    break;
-                }
-
-                vm->breakpoints[vm->bpn].type = BP_FUNCTION;
-                strcpy(vm->breakpoints[vm->bpn].f.func, cmd[1]);
-                vm->bpn += 1;
-
             } else if (cmd_index == 1) {
-                TODO("print break points");
+                printf("Num  Position\n");
+                for (int i = 0; i < vm->bpn; i++) {
+                    bp_print(vm->breakpoints, i);
+                }
             }
+
         } else if (strcmp(cmd[0], "bf") == 0) {
-            TODO("bf command");
+            if (cmd_index == 2) {
+                if (bf(vm, cmd) != 1) {
+                    return 1;
+                }
+            } else {
+                printf("bf command need one argument\n");
+            }
+
         } else {
             goto unknown;
         }
@@ -95,6 +136,16 @@ static int dbg_command(pvm* vm, char* input) {
             vm->instr_step = INT32_MAX;
         } else {
             goto unknown;
+        }
+        break;
+    }
+    case 'h': {
+        if (cmd_index == 1) {
+            printf("valid commands:\n"
+                   "b    c    h     si     p\n"
+                   "h <command> for details\n");
+        } else {
+            TODO("h command details");
         }
         break;
     }
@@ -161,14 +212,15 @@ unknown:
 
 int pdb_triggered(pvm* vm) {
     uint8_t* pc_base = vm->frame->code->bytecodes;
-    if (vm->pc - pc_base == 0) {
-        StrObject* s = (StrObject*) vm->frame->code->name;
-        for (int i = 0; i < vm->bpn; i++) {
-            if (oscscmp(s, vm->breakpoints[i].f.func) == 0) {
-                vm->instr_step = 0;
-                printf("break at function %s\n", vm->breakpoints[i].f.func);
-                return 1;
-            }
+
+    StrObject* s = (StrObject*) vm->frame->code->name;
+    for (int i = 0; i < vm->bpn; i++) {
+        if (oscscmp(s, vm->breakpoints[i].f.func) == 0
+            && (vm->pc - pc_base == vm->breakpoints[i].f.bc)) {
+            vm->instr_step = 0;
+            printf("break at function %s: %d\n",
+                    vm->breakpoints[i].f.func, vm->breakpoints[i].f.bc);
+            return 1;
         }
     }
     return vm->instr_step == 0;
