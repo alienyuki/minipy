@@ -125,7 +125,25 @@ static int dbg_command(pvm* vm, char* input) {
             } else {
                 printf("bf command need one argument\n");
             }
+        } else if (strcmp(cmd[0], "bt") == 0) {
+            FrameObject* f = vm->frame;
+            int i = 0;
+            while (f) {
+                printf("#%-3d ", i);
+                i += 1;
+                object_print(1, f->code->name);
 
+                // printf function argument in future.
+                // It relates to function calls so currently don't implement.
+                uint8_t* pc_base = f->code->bytecodes;
+                if (f->next_frame == NULL) {
+                    printf(" at %ld", vm->pc - pc_base);
+                } else {
+                    printf(" at %ld", f->pc - pc_base);
+                }
+                printf("\n");
+                f = f->prev_frame;
+            }
         } else {
             goto unknown;
         }
@@ -134,6 +152,52 @@ static int dbg_command(pvm* vm, char* input) {
     case 'c': {
         if (strcmp(cmd[0], "c") == 0) {
             vm->instr_step = INT32_MAX;
+        } else {
+            goto unknown;
+        }
+        break;
+    }
+    case 'f': {
+        // local variables, pc, sp
+        // maybe move to frame_object.c?
+        if (strcmp(cmd[0], "f") == 0) {
+            FrameObject* f = vm->frame;
+            if (cmd_index == 1) {
+                f->pc = vm->pc;
+                f->sp = vm->sp;
+            } else if (cmd_index == 2) {
+                int layer = atoi(cmd[1]);
+                if (layer == 0) {
+                    f->pc = vm->pc;
+                    f->sp = vm->sp;
+                }
+                while (layer > 0) {
+                    if (f->prev_frame == NULL) {
+                        printf("%d is too large. Already at the bottom.\n", layer);
+                        break;
+                    }
+                    layer -= 1;
+                    f = f->prev_frame;
+                }                
+            }
+
+            if (f->localsplus == f->sp) {
+                printf("locals empty\n");
+            } else {
+                // print variables names.
+                // It relates to function calls so currently don't implement.
+                for (Object** o = f->localsplus; o < f->sp - 1; o++) {
+                    object_print(1, *o);
+                    printf(", ");
+                }
+                object_print(1, *(f->sp - 1));
+                printf("\n");
+            }
+
+            uint8_t* pc_base = f->code->bytecodes;
+            int nlocalsplus  = f->code->localsplusnames->size;
+            Object** sp_base = f->localsplus + nlocalsplus;
+            printf("pc: %ld, sp: %ld\n", f->pc - pc_base, f->sp - sp_base);
         } else {
             goto unknown;
         }
@@ -233,11 +297,6 @@ int pdb(pvm* vm) {
         while (dbg_command(vm, input)) {
             read_line("(yuki) ", input, sizeof(input));
         }
-
-        uint8_t* pc_base = vm->frame->code->bytecodes;
-        int nlocalsplus = vm->frame->code->localsplusnames->size;
-        Object** sp_base = vm->frame->localsplus + nlocalsplus;
-        printf("pc: %ld, sp: %ld\n", vm->pc - pc_base, vm->sp - sp_base);
     }
     return 0;
 }
